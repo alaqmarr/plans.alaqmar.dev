@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Plan {
+  id            String        @id @default(cuid())
+  name          String
+  description   String?
+  price         Float
+  discountPrice Float?        // Calculated effective price
+  tenureYears   Int           @default(1)
+  paymentTerms  String        @default("[{\"name\":\"Advance\",\"percent\":50},{\"name\":\"Mid-Stage\",\"percent\":25},{\"name\":\"Final Deployment\",\"percent\":25}]")
+  validity      String?       // e.g., "1 year", "3 years"
+  isPopular     Boolean       @default(false)
+  features      PlanFeature[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Feature {
+  id            String        @id @default(cuid())
+  name          String
+  description   String?
+  price         Float         @default(0)
+  isOneTime     Boolean       @default(false)
+  upgradedById  String?
+  upgradedBy    Feature?      @relation("FeatureUpgrade", fields: [upgradedById], references: [id])
+  upgradesFor   Feature[]     @relation("FeatureUpgrade")
+  plans         PlanFeature[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model PlanFeature {
+  planId    String
+  featureId String
+  isIncluded Boolean @default(true) // Whether the feature is included or excluded
+  plan      Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  feature   Feature  @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@id([planId, featureId])
+}
+
+model CustomItem {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  isOneTime   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AppSettings {
+  id            String   @id @default(cuid())
+  contactEmail  String?
+  whatsappNumber String?
+  updatedAt     DateTime @updatedAt
+}
