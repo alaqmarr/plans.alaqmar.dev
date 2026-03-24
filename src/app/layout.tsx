@@ -11,6 +11,8 @@ import SplashScreen from "@/components/SplashScreen";
 import PageTransition from "@/components/PageTransition";
 import prisma from "@/lib/prisma";
 
+export const preferredRegion = ['sin1']
+
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const space = Space_Grotesk({ subsets: ["latin"], variable: "--font-space" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -40,9 +42,9 @@ export default async function RootLayout({
             {children}
           </PageTransition>
         </main>
-        <Footer 
-          contactEmail={settings?.contactEmail || process.env.CONTACT_EMAIL || undefined} 
-          whatsappNumber={whatsappNumber} 
+        <Footer
+          contactEmail={settings?.contactEmail || process.env.CONTACT_EMAIL || undefined}
+          whatsappNumber={whatsappNumber}
         />
         <WhatsAppFloat whatsappNumber={whatsappNumber} />
         <BackToTop />
