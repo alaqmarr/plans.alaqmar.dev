@@ -12,7 +12,7 @@ export default function PrintableQuote({
   formData?: any
 }) {
   return (
-    <div className="bg-white text-black p-10 min-h-[1100px] flex flex-col relative w-full font-outfit">
+    <div className="p-10 min-h-[1100px] flex flex-col relative w-full font-outfit" style={{ backgroundColor: '#ffffff', color: '#000000' }}>
 
       {/* Header */}
       <div className="flex justify-between items-start border-b-2 border-indigo-500 pb-6 mb-8">

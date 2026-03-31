@@ -26,7 +26,7 @@ export const exportReactElementToPdf = async (element: ReactNode, filename: stri
   try {
     // Await the rendering + font loading
     await new Promise<void>((resolve) => {
-      root.render(<div id="pdf-export-wrapper" className="bg-white text-black p-8 font-outfit">{element}</div>);
+      root.render(<div id="pdf-export-wrapper" style={{ backgroundColor: '#ffffff', color: '#000000', padding: '32px', fontFamily: '"Outfit", sans-serif' }}>{element}</div>);
       setTimeout(resolve, 800); // Give time for images/fonts to paint
     });
 
@@ -88,7 +88,7 @@ export const generateReactElementToPdfBlob = async (element: ReactNode): Promise
 
   try {
     await new Promise<void>((resolve) => {
-      root.render(<div id="pdf-export-wrapper-blob" className="bg-white text-black p-8 font-outfit">{element}</div>);
+      root.render(<div id="pdf-export-wrapper-blob" style={{ backgroundColor: '#ffffff', color: '#000000', padding: '32px', fontFamily: '"Outfit", sans-serif' }}>{element}</div>);
       setTimeout(resolve, 800);
     });
 

@@ -47,7 +47,7 @@ export default function PrintableInvoice({
   const textGray = "#4A5568";
 
   return (
-    <div id="printable-invoice" className="bg-white" style={{ width: '800px', padding: '60px', fontFamily: '"Outfit", sans-serif', color: darkTeal }}>
+    <div id="printable-invoice" style={{ backgroundColor: '#ffffff', width: '800px', padding: '60px', fontFamily: '"Outfit", sans-serif', color: darkTeal }}>
       
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
