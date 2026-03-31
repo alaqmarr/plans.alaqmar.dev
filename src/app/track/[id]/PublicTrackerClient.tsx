@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { CheckCircle2, Circle, Smartphone, Building2, CreditCard, Copy, Link as LinkIcon, BadgeCheck } from "lucide-react";
+import { CheckCircle2, Circle, Smartphone, Building2, CreditCard, Copy, Link as LinkIcon, BadgeCheck, Check, Box } from "lucide-react";
 
 export default function PublicTrackerClient({ client, settings }: { client: any; settings: any }) {
   let paymentStructure: any[] = [];
@@ -58,6 +58,30 @@ export default function PublicTrackerClient({ client, settings }: { client: any;
           </div>
         </div>
       </div>
+
+      {/* Plan Features Section */}
+      {client.plan?.features && client.plan.features.length > 0 && (
+        <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 md:p-8 relative shadow-2xl">
+          <h3 className="font-outfit text-xl font-bold text-white mb-6 tracking-tight flex items-center gap-3">
+            <Box className="text-indigo-400" /> Plan Included Features
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4">
+            {client.plan.features.filter((pf: any) => pf.isIncluded || !client.plan.price).map((pf: any) => (
+              <div key={pf.id} className="flex items-start gap-3 bg-zinc-950/30 p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+                <div className="bg-emerald-500/15 p-1.5 rounded-full mt-0.5 shrink-0">
+                  <Check size={14} className="text-emerald-400" />
+                </div>
+                <div>
+                  <div className="font-outfit text-sm text-zinc-200 font-bold tracking-wide leading-snug">{pf.feature.name}</div>
+                  {pf.customValue && (
+                    <div className="text-[10px] text-zinc-500 mt-1 font-outfit font-bold uppercase tracking-widest bg-zinc-900 px-2 py-0.5 rounded border border-white/5 inline-block">{pf.customValue}</div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
