@@ -12,7 +12,11 @@ export default async function SettingsPage() {
       <SettingsClient 
         initialSettings={{
           contactEmail: settings?.contactEmail || process.env.CONTACT_EMAIL || "",
-          whatsappNumber: settings?.whatsappNumber || process.env.WHATSAPP_NUMBER || ""
+          whatsappNumber: settings?.whatsappNumber || process.env.WHATSAPP_NUMBER || "",
+          upiId: settings?.upiId || "",
+          bankAccountName: settings?.bankAccountName || "",
+          bankAccountNumber: settings?.bankAccountNumber || "",
+          bankIfsc: settings?.bankIfsc || "",
         }} 
       />
     </div>

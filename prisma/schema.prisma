@@ -26,6 +26,7 @@ model Plan {
   validity      String?       // e.g., "1 year", "3 years"
   isPopular     Boolean       @default(false)
   features      PlanFeature[]
+  clients       Client[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 }
@@ -65,8 +66,26 @@ model CustomItem {
 }
 
 model AppSettings {
-  id            String   @id @default(cuid())
-  contactEmail  String?
-  whatsappNumber String?
-  updatedAt     DateTime @updatedAt
+  id                String   @id @default(cuid())
+  contactEmail      String?
+  whatsappNumber    String?
+  upiId             String?
+  bankAccountName   String?
+  bankAccountNumber String?
+  bankIfsc          String?
+  updatedAt         DateTime @updatedAt
+}
+
+model Client {
+  id               String   @id @default(cuid())
+  name             String
+  email            String?
+  phoneNumbers     String[]
+  planId           String
+  plan             Plan     @relation(fields: [planId], references: [id])
+  offeredPrice     Float
+  paymentStructure String   @default("[]") // JSON representing payment milestones
+  trackingLink     String   @unique @default(cuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
