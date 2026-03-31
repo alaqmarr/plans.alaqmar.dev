@@ -4,8 +4,7 @@ import { useState } from "react";
 import { updateClient, deleteClient } from "@/app/actions/clients";
 import { createInvoice } from "@/app/actions/invoices";
 import { useRouter } from "next/navigation";
-import { generateReactElementToPdfBlob } from "@/lib/pdfGenerator";
-import PrintableInvoice from "@/components/pdf/PrintableInvoice";
+import { generateInvoicePdfBlob } from "@/lib/pdfGenerator";
 import { CheckCircle2, Circle, Copy, UploadCloud, X, Link as LinkIcon, Trash2, BellRing, BellOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { useConfirm } from "@/providers/ConfirmProvider";
@@ -106,37 +105,30 @@ export default function ClientDetailClient({ client }: { client: any }) {
     const msAmt = paymentStructure[selectedMilestoneIdx].amount;
     
     const invoiceNumber = `TWS-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
-    
-    // Attempt parsing settings from the app if possible, or use fallbacks
-    // The user had bank details in schema: bankAccountName, bankAccountNumber, etc.
-    // For now we will use placeholders, or client could fetch them from Settings.
-    // Actually, let's use the DB's env or static defaults since we don't have Settings context here.
-    const element = <PrintableInvoice 
-      invoiceNumber={invoiceNumber}
-      date={new Date()}
-      clientName={client.name}
-      items={[{ description: `Website Development | ${msName}`, qty: 1, price: msAmt, total: msAmt }]}
-      subtotal={msAmt}
-      discount={0}
-      grandTotal={msAmt}
-      bankDetails={{
-        payeeName: process.env.NEXT_PUBLIC_BANK_PAYEE || "THE WEB SENSEI",
-        bankName: process.env.NEXT_PUBLIC_BANK_NAME || "INDUSIND BANK",
-        accountNumber: process.env.NEXT_PUBLIC_BANK_ACC || "159618443558",
-        ifsc: process.env.NEXT_PUBLIC_BANK_IFSC || "INDB0000290"
-      }}
-      contact={{
-        phone: "+91 96184 43558",
-        email: "info@alaqmar.dev",
-        website: "https://alaqmar.dev"
-      }}
-    />;
 
     try {
-      const blob = await generateReactElementToPdfBlob(element);
+      const blob = generateInvoicePdfBlob({
+        invoiceNumber,
+        date: new Date(),
+        clientName: client.name,
+        items: [{ description: `Website Development | ${msName}`, qty: 1, price: msAmt, total: msAmt }],
+        subtotal: msAmt,
+        discount: 0,
+        grandTotal: msAmt,
+        bankDetails: {
+          payeeName: "ALAQMAR",
+          accountNumber: "50100742482480",
+          ifsc: "HDFC0001378",
+        },
+        contact: {
+          phone: "+91 96184 43558",
+          email: "info@alaqmar.dev",
+          website: "https://alaqmar.dev",
+        },
+      });
       const file = new File([blob], `Auto_Invoice_${msName.replace(/\s+/g,'_')}.pdf`, { type: "application/pdf" });
       setInvoiceFile(file);
-      toast.success("Invoice Auto-Generated & Attached successfully! You may now confirm payment.");
+      toast.success("Invoice auto-generated! You may now confirm payment.");
     } catch {
       toast.error("Failed to generate invoice.");
     } finally {
