@@ -38,7 +38,7 @@ export default function MessagesClient({ clients }: { clients: any[] }) {
     const formatRupee = (amt: number) => `*₹${amt.toLocaleString('en-IN')}*`;
 
     if (template === "advance") {
-      return `Hello *${client.name}*! 👋\n\nThank you for choosing *Alaqmar IT Solutions* for your _${client.plan?.name || 'Project'}_. We are thrilled to partner with you and bring your vision to life! 🚀\n\n📌 *Project Overview:*\n• Total Agreed Investment: ${formatRupee(client.offeredPrice || 0)}\n• Advance Required: ${formatRupee(advanceAmount)}\n\nTo officially kick off the development phase, please process the advance payment using your personalized, secure tracking portal below:\n\n🔗 ${trackingLink}\n\n💡 _Tip: You can always use this link to track your payment milestones, download receipts, and monitor progress securely anytime._\n\nLooking forward to an amazing journey together! ✨`;
+      return `Hello *${client.name}*! 👋\n\nThank you for choosing *THE WEB SENSEI* for your _${client.plan?.name || 'Project'}_. We are thrilled to partner with you and bring your vision to life! 🚀\n\n📌 *Project Overview:*\n• Total Agreed Investment: ${formatRupee(client.offeredPrice || 0)}\n• Advance Required: ${formatRupee(advanceAmount)}\n\nTo officially kick off the development phase, please process the advance payment using your personalized, secure tracking portal below:\n\n🔗 ${trackingLink}\n\n💡 _Tip: You can always use this link to track your payment milestones, download receipts, and monitor progress securely anytime._\n\nLooking forward to an amazing journey together! ✨`;
     }
     else if (template === "reminder") {
       const ms = selectedMilestoneIdx !== null ? paymentStructure[selectedMilestoneIdx] : null;
@@ -47,7 +47,7 @@ export default function MessagesClient({ clients }: { clients: any[] }) {
       return `Hello *${client.name}*! 👋\n\nThis is a friendly reminder regarding your _${client.plan?.name || 'Project'}_. \n\nThe payment for the milestone *"${ms.name}"* is currently due.\n\n💰 *Amount Due:* ${formatRupee(ms.amount)}\n\nPlease process the payment securely using your personal tracking portal:\n🔗 ${trackingLink}\n\nLet us know once the transfer is completed so we can attach the official receipt to your portal. Thank you! 🙏`;
     }
     else if (template === "completion") {
-      return `Hello *${client.name}*! 🎉\n\nGreat news! Your _${client.plan?.name || 'Project'}_ development is officially *COMPLETE* and has been made live! 🌐✨\n\nThank you for trusting *Alaqmar IT Solutions* with your digital presence. It has been an absolute pleasure working with you, and we sincerely hope you love the final result!\n\nIf there are any remaining payments, please clear them via your portal:\n🔗 ${trackingLink}\n\nWe would love to collaborate with you again in the future! Let us know if you need any further assistance or maintenance support.\n\nBest Wishes, \n*Alaqmar IT Solutions* 🚀`;
+      return `Hello *${client.name}*! 🎉\n\nGreat news! Your _${client.plan?.name || 'Project'}_ development is officially *COMPLETE* and has been made live! 🌐✨\n\nThank you for trusting *THE WEB SENSEI* with your digital presence. It has been an absolute pleasure working with you, and we sincerely hope you love the final result!\n\nIf there are any remaining payments, please clear them via your portal:\n🔗 ${trackingLink}\n\nWe would love to collaborate with you again in the future! Let us know if you need any further assistance or maintenance support.\n\nBest Wishes, \n*THE WEB SENSEI* 🚀`;
     }
     
     return "";

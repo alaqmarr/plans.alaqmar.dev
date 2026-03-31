@@ -18,7 +18,7 @@ const space = Space_Grotesk({ subsets: ["latin"], variable: "--font-space" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 export const metadata: Metadata = {
-  title: "Development Plans | Alaqmar",
+  title: "Development Plans | THE WEB SENSEI",
   description: "Crafting super modern, highly functional, and fully custom web solutions tailored to elevate your business.",
 };
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export const metadata = { title: "Privacy Policy | Alaqmar" };
+export const metadata = { title: "Privacy Policy | THE WEB SENSEI" };
 
 export default function PrivacyPolicy() {
   return (

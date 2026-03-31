@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export const metadata = { title: "Terms of Service | Alaqmar" };
+export const metadata = { title: "Terms of Service | THE WEB SENSEI" };
 
 export default function TermsOfService() {
   return (
@@ -17,7 +17,7 @@ export default function TermsOfService() {
         <p className="font-space text-rose-400 text-sm mb-12 uppercase tracking-widest">Last Updated: March 2026</p>
 
         <div className="space-y-8 text-zinc-300 leading-relaxed max-w-none prose-p:mb-4 prose-h2:font-outfit prose-h2:text-2xl prose-h2:font-bold prose-h2:text-white prose-h2:mb-4 prose-h2:mt-10">
-          <p>These Terms of Service ("Terms") constitute a legally binding agreement made between you and Alaqmar, governed by the laws of India, including the <strong>Indian Contract Act, 1872</strong> and the <strong>Information Technology Act, 2000</strong>. By accessing our platform or engaging our digital development services, you agree to be bound by these Terms.</p>
+          <p>These Terms of Service ("Terms") constitute a legally binding agreement made between you and THE WEB SENSEI, governed by the laws of India, including the <strong>Indian Contract Act, 1872</strong> and the <strong>Information Technology Act, 2000</strong>. By accessing our platform or engaging our digital development services, you agree to be bound by these Terms.</p>
 
           <h2>1. Service Engagement</h2>
           <p>We provide custom web development, deployment, and ongoing technical maintenance based on finalized plans. All project scopes, features, and tenures are legally established upon payment of the initially agreed milestone (Advance).</p>

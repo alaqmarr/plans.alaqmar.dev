@@ -27,11 +27,11 @@ export default function HomeClient({ plans, whatsappNumber, contactEmail }: { pl
   
   const handleEnquiry = (planName: string) => {
     if (whatsappNumber) {
-      const message = `Hi Alaqmar! I'm interested in the ${planName} plan.`;
+      const message = `Hi THE WEB SENSEI! I'm interested in the ${planName} plan.`;
       const formattedNum = whatsappNumber.replace(/[^0-9]/g, '');
       window.open(`https://wa.me/${formattedNum}?text=${encodeURIComponent(message)}`, "_blank");
     } else {
-      window.location.href = `mailto:contact@alaqmar.dev?subject=Enquiry about ${planName}`;
+      window.location.href = `mailto:contact@thewebsensei.in?subject=Enquiry about ${planName}`;
     }
   };
 

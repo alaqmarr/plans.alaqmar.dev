@@ -23,7 +23,7 @@ export default function Footer({ contactEmail, whatsappNumber }: { contactEmail?
               <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
                 <Rocket size={16} />
               </div>
-              <span className="font-space text-2xl font-bold tracking-tight">Alaqmar</span>
+              <span className="font-space text-2xl font-bold tracking-tight">THE WEB SENSEI</span>
             </Link>
             <p className="font-outfit max-w-md text-zinc-400 mb-8 leading-relaxed">
               Crafting super modern, highly functional, and fully custom web solutions tailored to elevate your business and wow your clients.
@@ -69,7 +69,7 @@ export default function Footer({ contactEmail, whatsappNumber }: { contactEmail?
         </div>
 
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-outfit text-zinc-500 relative z-10">
-          <p>© {new Date().getFullYear()} Alaqmar. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} THE WEB SENSEI. All rights reserved.</p>
           <div className="flex flex-wrap justify-center md:justify-end gap-x-6 gap-y-2">
             <Link href="/privacy" className="hover:text-zinc-300 transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-zinc-300 transition-colors">Terms of Service</Link>

@@ -48,7 +48,7 @@ export default function SplashScreen() {
               transition={{ delay: 0.3 }}
               className="font-space text-3xl font-bold text-white tracking-tight"
             >
-              Alaqmar
+              THE WEB SENSEI
             </motion.h1>
             <motion.div
               initial={{ width: 0 }}

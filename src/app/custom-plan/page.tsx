@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import CustomPlanClient from "./CustomPlanClient";
 
 export const metadata = {
-  title: "Create Custom Plan | Alaqmar",
+  title: "Create Custom Plan | THE WEB SENSEI",
   description: "Build your own custom development plan by selecting individual technical components.",
 };
 

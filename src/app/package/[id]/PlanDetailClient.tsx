@@ -5,7 +5,8 @@ import { Check, X, ArrowLeft, ArrowRight, Calendar, Clock, CreditCard, Sparkles,
 import Link from "next/link";
 import { PlanBreakdownChart } from "@/components/CostBreakdownChart";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
-import { generatePlanPDF } from "@/lib/generatePDF";
+import { exportReactElementToPdf } from "@/lib/pdfGenerator";
+import PrintablePlan from "@/components/pdf/PrintablePlan";
 
 export default function PlanDetailClient({ plan, whatsappNumber, contactEmail }: { plan: any; whatsappNumber: string; contactEmail: string }) {
   const includedFeatures = plan.features.filter((pf: any) => pf.isIncluded);
@@ -132,7 +133,20 @@ export default function PlanDetailClient({ plan, whatsappNumber, contactEmail }:
                     <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                   </button>
                   <button
-                    onClick={() => generatePlanPDF(plan, offerPrice, basePrice)}
+                    onClick={async () => {
+                      const btn = document.getElementById("dl-plan-btn-1");
+                      const orig = btn ? btn.innerHTML : "";
+                      if (btn) btn.innerHTML = "Generating...";
+                      try {
+                        await exportReactElementToPdf(
+                          <PrintablePlan plan={plan} />, 
+                          `THE_WEB_SENSEI_${plan.name}_Plan.pdf`
+                        );
+                      } finally {
+                        if (btn) btn.innerHTML = orig;
+                      }
+                    }}
+                    id="dl-plan-btn-1"
                     className="flex items-center gap-2 px-6 py-3.5 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-xl font-outfit font-bold text-sm uppercase tracking-widest transition-all"
                   >
                     <Download size={16} />
@@ -274,7 +288,17 @@ export default function PlanDetailClient({ plan, whatsappNumber, contactEmail }:
                   <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button
-                  onClick={() => generatePlanPDF(plan, offerPrice, basePrice)}
+                  onClick={async () => {
+  const btn = document.getElementById("dl-plan-btn-2");
+  const orig = btn ? btn.innerHTML : "";
+  if (btn) btn.innerHTML = "Generating...";
+  try {
+    await exportReactElementToPdf(<PrintablePlan plan={plan} />, `THE_WEB_SENSEI_${plan.name}_Plan.pdf`);
+  } finally {
+    if (btn) btn.innerHTML = orig;
+  }
+}}
+id="dl-plan-btn-2"
                   className="w-full flex items-center justify-center gap-2 py-3 bg-white/5 hover:bg-white/10 border border-white/5 text-zinc-400 hover:text-white rounded-xl font-outfit font-bold text-xs uppercase tracking-widest transition-all"
                 >
                   <Download size={14} />

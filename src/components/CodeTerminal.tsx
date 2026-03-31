@@ -14,7 +14,7 @@ const codeLines = [
   { text: "  → Compiling 47 routes (SSG + ISR)", type: "info" as const },
   { text: "  → Generating static pages (47/47)", type: "info" as const },
   { text: "  → Uploading artifacts to edge network", type: "info" as const },
-  { text: "✓ Deployed to https://client.alaqmar.dev", type: "success" as const },
+  { text: "✓ Deployed to https://client.thewebsensei.in", type: "success" as const },
   { text: "  → SSL certificate provisioned", type: "info" as const },
   { text: "  → CDN cache invalidated", type: "info" as const },
   { text: "✓ All systems operational — 99.99% uptime", type: "success" as const },
@@ -98,7 +98,7 @@ export default function CodeTerminal() {
             <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
             <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
             <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-            <span className="font-space text-[11px] text-zinc-500 ml-3 tracking-wider">alaqmar@production ~ /deploy</span>
+            <span className="font-space text-[11px] text-zinc-500 ml-3 tracking-wider">thewebsensei@production ~ /deploy</span>
           </div>
 
           {/* Terminal body */}

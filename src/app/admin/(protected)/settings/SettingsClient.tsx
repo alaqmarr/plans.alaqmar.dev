@@ -96,7 +96,7 @@ export default function SettingsClient({
                 className="font-outfit w-full bg-zinc-950/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-medium"
                 value={formData.bankAccountName}
                 onChange={(e) => setFormData({ ...formData, bankAccountName: e.target.value })}
-                placeholder="Alaqmar IT Solutions"
+                placeholder="THE WEB SENSEI"
               />
             </div>
 

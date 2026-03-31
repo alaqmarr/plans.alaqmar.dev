@@ -45,7 +45,7 @@ export default function Navbar() {
               <Rocket size={20} />
             </div>
             <span className="font-space text-2xl font-bold tracking-tight text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-indigo-400 transition-all">
-              Alaqmar
+              THE WEB SENSEI
             </span>
           </Link>
 

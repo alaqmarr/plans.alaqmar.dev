@@ -3,7 +3,8 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Check, X, ArrowUp, Download } from "lucide-react";
-import { generateComparisonPDF } from "@/lib/generatePDF";
+import { exportReactElementToPdf } from "@/lib/pdfGenerator";
+import PrintableComparison from "@/components/pdf/PrintableComparison";
 
 export default function PlanComparison({ plans }: { plans: any[] }) {
   // Get all unique features across all plans
@@ -172,7 +173,20 @@ export default function PlanComparison({ plans }: { plans: any[] }) {
               </div>
             </div>
             <button
-              onClick={() => generateComparisonPDF(plans)}
+              onClick={async () => {
+                const btn = document.getElementById("dl-comp-btn");
+                const orig = btn ? btn.innerHTML : "";
+                if (btn) btn.innerHTML = "Exporting...";
+                try {
+                  await exportReactElementToPdf(
+                    <PrintableComparison plans={plans} allFeatures={allFeatures} />, 
+                    `THE_WEB_SENSEI_Comparison.pdf`
+                  );
+                } finally {
+                  if (btn) btn.innerHTML = orig;
+                }
+              }}
+              id="dl-comp-btn"
               className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-lg font-outfit font-bold text-[10px] uppercase tracking-widest transition-all"
             >
               <Download size={12} />

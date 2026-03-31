@@ -105,7 +105,7 @@ export default function PublicTrackerClient({ client, settings }: { client: any;
                           
                           {settings.upiId ? (
                             <a 
-                              href={`upi://pay?pa=${settings.upiId}&pn=${encodeURIComponent(settings.bankAccountName || "Alaqmar IT Solutions")}&am=${step.amount}&cu=INR`}
+                              href={`upi://pay?pa=${settings.upiId}&pn=${encodeURIComponent(settings.bankAccountName || "THE WEB SENSEI")}&am=${step.amount}&cu=INR`}
                               className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-6 py-3 bg-[#4285F4] hover:bg-[#3367d6] text-white rounded-xl font-outfit font-bold rounded-xl transition-all shadow-lg shadow-[#4285F4]/20"
                             >
                               <Smartphone size={18} /> Pay ₹{step.amount} via UPI App
@@ -135,9 +135,9 @@ export default function PublicTrackerClient({ client, settings }: { client: any;
               <div className="bg-zinc-950/50 rounded-xl p-4 border border-white/5 flex justify-between items-center group">
                 <div>
                   <div className="text-[10px] font-outfit uppercase tracking-widest text-zinc-500 font-bold mb-1">Account Name</div>
-                  <div className="font-outfit font-medium text-white">{settings.bankAccountName || "Alaqmar IT Solutions"}</div>
+                  <div className="font-outfit font-medium text-white">{settings.bankAccountName || "THE WEB SENSEI"}</div>
                 </div>
-                <button onClick={() => handleCopy(settings.bankAccountName || "Alaqmar IT Solutions")} className="p-2 bg-white/5 text-zinc-500 group-hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all"><Copy size={14}/></button>
+                <button onClick={() => handleCopy(settings.bankAccountName || "THE WEB SENSEI")} className="p-2 bg-white/5 text-zinc-500 group-hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all"><Copy size={14}/></button>
               </div>
 
               <div className="bg-zinc-950/50 rounded-xl p-4 border border-white/5 flex justify-between items-center group">
