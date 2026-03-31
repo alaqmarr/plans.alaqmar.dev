@@ -115,7 +115,7 @@ export default function ClientDetailClient({ client }: { client: any }) {
       invoiceNumber={invoiceNumber}
       date={new Date()}
       clientName={client.name}
-      items={[{ description: msName, qty: 1, price: msAmt, total: msAmt }]}
+      items={[{ description: `Website Development | ${msName}`, qty: 1, price: msAmt, total: msAmt }]}
       subtotal={msAmt}
       discount={0}
       grandTotal={msAmt}
@@ -126,9 +126,9 @@ export default function ClientDetailClient({ client }: { client: any }) {
         ifsc: process.env.NEXT_PUBLIC_BANK_IFSC || "INDB0000290"
       }}
       contact={{
-        phone: process.env.NEXT_PUBLIC_PHONE || "+91 96184 43558",
-        email: process.env.NEXT_PUBLIC_EMAIL || "info@thewebsensei.in",
-        website: process.env.NEXT_PUBLIC_WEBSITE || "https://thewebsensei.in"
+        phone: "+91 96184 43558",
+        email: "info@alaqmar.dev",
+        website: "https://alaqmar.dev"
       }}
     />;
 

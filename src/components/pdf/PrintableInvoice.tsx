@@ -137,23 +137,19 @@ export default function PrintableInvoice({
           </div>
 
           <div style={{ fontSize: '12px', fontWeight: 800, color: darkTeal, lineHeight: '1.6' }}>
-            {bankDetails.bankName}:<br/>
-            {bankDetails.accountNumber}<br/>
-            {bankDetails.ifsc}
+            A/C NO: {bankDetails.accountNumber}<br/>
+            IFSC: {bankDetails.ifsc}
           </div>
         </div>
 
         {/* Terms */}
         <div style={{ backgroundColor: softGreen, borderRadius: '8px', padding: '24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 800, color: primaryGreen, letterSpacing: '1px', marginBottom: '16px' }}>TERMS AND CONDITIONS:</div>
+          <div style={{ fontSize: '12px', fontWeight: 800, color: primaryGreen, letterSpacing: '1px', marginBottom: '16px' }}>NOTE & TERMS:</div>
           
           <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '11px', fontWeight: 700, color: darkTeal, lineHeight: '1.8' }}>
-            <li>ALL PRICES QUOTED ARE VALID FOR 15 DAYS.</li>
-            <li>PAYMENT TERMS AS:
-              <ul style={{ paddingLeft: '16px', marginTop: '4px' }}>
-                <li>ADVANCE - 100% OF THE INVOICE AMOUNT.</li>
-              </ul>
-            </li>
+            <li>This is a system-generated invoice for your records and does not require a physical signature.</li>
+            <li>Payment is required immediately upon receipt to guarantee uninterrupted service delivery.</li>
+            <li>All quoted figures are final and bound by the initial contract agreement.</li>
           </ul>
         </div>
       </div>

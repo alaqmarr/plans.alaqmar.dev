@@ -62,7 +62,7 @@ export default function NewInvoiceClient({ clients, settings }: { clients: any[]
       invoiceNumber={invoiceNumber}
       date={new Date()}
       clientName={client.name}
-      items={[{ description: msName, qty: 1, price: msAmt, total: msAmt }]}
+      items={[{ description: `Website Development | ${msName}`, qty: 1, price: msAmt, total: msAmt }]}
       subtotal={msAmt}
       discount={0}
       grandTotal={msAmt}
@@ -73,9 +73,9 @@ export default function NewInvoiceClient({ clients, settings }: { clients: any[]
         ifsc: process.env.NEXT_PUBLIC_BANK_IFSC || settings?.bankIfsc || "INDB0000290"
       }}
       contact={{
-        phone: process.env.NEXT_PUBLIC_PHONE || "+91 96184 43558",
-        email: process.env.NEXT_PUBLIC_EMAIL || "info@thewebsensei.in",
-        website: process.env.NEXT_PUBLIC_WEBSITE || "https://thewebsensei.in"
+        phone: "+91 96184 43558",
+        email: "info@alaqmar.dev",
+        website: "https://alaqmar.dev"
       }}
     />;
 
@@ -217,7 +217,7 @@ export default function NewInvoiceClient({ clients, settings }: { clients: any[]
               invoiceNumber={invoiceNumber}
               date={new Date()}
               clientName={client.name}
-              items={[{ description: activeMilestone.name, qty: 1, price: activeMilestone.amount, total: activeMilestone.amount }]}
+              items={[{ description: `Website Development | ${activeMilestone.name}`, qty: 1, price: activeMilestone.amount, total: activeMilestone.amount }]}
               subtotal={activeMilestone.amount}
               discount={0}
               grandTotal={activeMilestone.amount}
@@ -228,9 +228,9 @@ export default function NewInvoiceClient({ clients, settings }: { clients: any[]
                 ifsc: process.env.NEXT_PUBLIC_BANK_IFSC || settings?.bankIfsc || "INDB0000290"
               }}
               contact={{
-                phone: process.env.NEXT_PUBLIC_PHONE || "+91 96184 43558",
-                email: process.env.NEXT_PUBLIC_EMAIL || "info@thewebsensei.in",
-                website: process.env.NEXT_PUBLIC_WEBSITE || "https://thewebsensei.in"
+                phone: "+91 96184 43558",
+                email: "info@alaqmar.dev",
+                website: "https://alaqmar.dev"
               }}
             />
           </div>
