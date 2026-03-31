@@ -8,7 +8,7 @@ import { CheckCircle2, ChevronDown, FileText, UploadCloud, Link as LinkIcon } fr
 import { useConfirm } from "@/providers/ConfirmProvider";
 import { updateClient } from "@/app/actions/clients";
 import { createInvoice } from "@/app/actions/invoices";
-import { generateReactElementToPdfBlob } from "@/lib/pdfGenerator";
+import { generateReactElementToPdfBlob, exportReactElementToPdf } from "@/lib/pdfGenerator";
 import PrintableInvoice from "@/components/pdf/PrintableInvoice";
 
 export default function NewInvoiceClient({ clients, settings }: { clients: any[], settings: any }) {
@@ -125,6 +125,46 @@ export default function NewInvoiceClient({ clients, settings }: { clients: any[]
     }
   };
 
+  const handleDownloadOnly = async () => {
+    if (!client || milestoneIdx === null || !activeMilestone) return;
+
+    setIsGenerating(true);
+    const msName = activeMilestone.name;
+    const msAmt = activeMilestone.amount;
+
+    const element = <PrintableInvoice 
+      invoiceNumber={invoiceNumber}
+      date={new Date()}
+      clientName={client.name}
+      items={[{ description: `Website Development | ${msName}`, qty: 1, price: msAmt, total: msAmt }]}
+      subtotal={msAmt}
+      discount={0}
+      grandTotal={msAmt}
+      bankDetails={{
+        payeeName: process.env.NEXT_PUBLIC_BANK_PAYEE || settings?.bankAccountName || "THE WEB SENSEI",
+        bankName: process.env.NEXT_PUBLIC_BANK_NAME || "INDUSIND BANK",
+        accountNumber: process.env.NEXT_PUBLIC_BANK_ACC || settings?.bankAccountNumber || "159618443558",
+        ifsc: process.env.NEXT_PUBLIC_BANK_IFSC || settings?.bankIfsc || "INDB0000290"
+      }}
+      contact={{
+        phone: "+91 96184 43558",
+        email: "info@alaqmar.dev",
+        website: "https://alaqmar.dev"
+      }}
+    />;
+
+    try {
+      toast.loading("Rendering PDF for local download...", { id: "dl" });
+      await exportReactElementToPdf(element, `Invoice_${client.name.replace(/[^a-zA-Z0-9]/g, '_')}_${msName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+      toast.success("Downloaded Successfully!", { id: "dl" });
+    } catch {
+      toast.error("Failed to generate PDF.", { id: "dl" });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
       {/* Controls Form */}
@@ -182,24 +222,34 @@ export default function NewInvoiceClient({ clients, settings }: { clients: any[]
           </div>
         )}
 
-        <button
-          disabled={!client || milestoneIdx === null || isGenerating}
-          onClick={handleCreateAndAttach}
-          className="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white rounded-xl font-outfit font-black uppercase tracking-widest text-sm shadow-xl shadow-emerald-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 relative overflow-hidden"
-        >
-          {isGenerating ? (
-            <span className="flex items-center gap-2">
-              <UploadCloud size={20} className="animate-bounce" /> Processing Architecture...
-            </span>
-          ) : (
-            <>
-              {existingInvoiceWarning ? "Revoke & Regenerate Override" : "Finalize & Map Invoice"}
-            </>
-          )}
-          
-          {/* Shimmer Effect */}
-          {!isGenerating && <div className="absolute inset-0 -translate-x-full hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />}
-        </button>
+        <div className="flex flex-col gap-3">
+          <button
+            disabled={!client || milestoneIdx === null || isGenerating}
+            onClick={handleCreateAndAttach}
+            className="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white rounded-xl font-outfit font-black uppercase tracking-widest text-sm shadow-xl shadow-emerald-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 relative overflow-hidden"
+          >
+            {isGenerating ? (
+              <span className="flex items-center gap-2">
+                <UploadCloud size={20} className="animate-bounce" /> Processing Architecture...
+              </span>
+            ) : (
+              <>
+                {existingInvoiceWarning ? "Revoke & Regenerate Override" : "Finalize & Map Invoice"}
+              </>
+            )}
+            
+            {/* Shimmer Effect */}
+            {!isGenerating && <div className="absolute inset-0 -translate-x-full hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />}
+          </button>
+
+          <button
+            disabled={!client || milestoneIdx === null || isGenerating}
+            onClick={handleDownloadOnly}
+            className="w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/5 rounded-xl font-outfit font-bold uppercase tracking-widest text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            <FileText size={16} /> Export PDF Locally Only
+          </button>
+        </div>
       </div>
 
       {/* Visual Live Representation Map */}

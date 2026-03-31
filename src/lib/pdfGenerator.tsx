@@ -38,6 +38,7 @@ export const exportReactElementToPdf = async (element: ReactNode, filename: stri
       useCORS: true,
       logging: false,
       backgroundColor: "#ffffff",
+      ignoreElements: (element) => element.tagName.toLowerCase() === 'style' || element.tagName.toLowerCase() === 'link'
     });
     
     const imgData = canvas.toDataURL("image/jpeg", 1.0);
@@ -100,6 +101,7 @@ export const generateReactElementToPdfBlob = async (element: ReactNode): Promise
       useCORS: true,
       logging: false,
       backgroundColor: "#ffffff",
+      ignoreElements: (element) => element.tagName.toLowerCase() === 'style' || element.tagName.toLowerCase() === 'link'
     });
     
     const imgData = canvas.toDataURL("image/jpeg", 1.0);
