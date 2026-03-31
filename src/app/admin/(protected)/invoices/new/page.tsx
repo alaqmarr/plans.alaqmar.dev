@@ -1,6 +1,5 @@
 import prisma from "@/lib/prisma";
 import NewInvoiceClient from "./NewInvoiceClient";
-
 export const metadata = {
   title: "Create Invoice | Admin",
 };
