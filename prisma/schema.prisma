@@ -84,6 +84,7 @@ model Client {
   planId           String
   plan             Plan      @relation(fields: [planId], references: [id])
   invoices         Invoice[]
+  tickets          Ticket[]
   offeredPrice     Float
   paymentStructure String   @default("[]") // JSON representing payment milestones
   trackingLink     String   @unique @default(cuid())
@@ -100,4 +101,27 @@ model Invoice {
   amount          Float
   fileUrl         String
   createdAt       DateTime @default(now())
+}
+
+model Ticket {
+  id          String          @id @default(cuid())
+  clientId    String
+  client      Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  subject     String
+  description String
+  status      String          @default("open")
+  priority    String          @default("normal")
+  createdBy   String          @default("admin")
+  messages    TicketMessage[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender    String
+  message   String
+  createdAt DateTime @default(now())
 }

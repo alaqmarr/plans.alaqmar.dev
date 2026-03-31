@@ -55,11 +55,21 @@ export default async function TrackingPage({ params }: { params: Promise<{ id: s
 
   const settings = await prisma.appSettings.findFirst();
 
+  const tickets = await prisma.ticket.findMany({
+    where: { clientId: client.id },
+    include: {
+      messages: { orderBy: { createdAt: "asc" } },
+      _count: { select: { messages: true } },
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+
   return (
     <div className="min-h-screen bg-[#09090b] text-white pt-28 pb-20 px-4 sm:px-6">
       <div className="max-w-4xl mx-auto space-y-12">
         <PublicTrackerClient
           client={client}
+          tickets={tickets}
           settings={{
             upiId: settings?.upiId || "",
             bankAccountName: settings?.bankAccountName || "",
