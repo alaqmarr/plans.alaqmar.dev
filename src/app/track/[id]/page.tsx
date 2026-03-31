@@ -2,9 +2,10 @@ import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import PublicTrackerClient from "./PublicTrackerClient";
 
-export default async function TrackingPage({ params }: { params: { id: string } }) {
+export default async function TrackingPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const client = await prisma.client.findUnique({
-    where: { trackingLink: params.id },
+    where: { trackingLink: id },
     include: {
       plan: {
         include: {

@@ -2,9 +2,10 @@ import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import ClientDetailClient from "./ClientDetailClient";
 
-export default async function ClientDetailPage({ params }: { params: { id: string } }) {
+export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const client = await prisma.client.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       plan: true
     }
