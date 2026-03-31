@@ -4,13 +4,17 @@ import Link from "next/link";
 import { deletePlan } from "@/app/actions/plans";
 import { Edit2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { useConfirm } from "@/providers/ConfirmProvider";
 
 export default function PlansTable({ plans }: { plans: any[] }) {
   const router = useRouter();
+  const confirm = useConfirm();
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this plan?")) {
+    if (await confirm({ title: "Delete Plan", message: "Are you sure you want to delete this plan?", destructive: true })) {
       await deletePlan(id);
+      toast.success("Plan deleted successfully");
       router.refresh();
     }
   };

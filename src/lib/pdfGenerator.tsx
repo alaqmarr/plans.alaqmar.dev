@@ -63,7 +63,55 @@ export const exportReactElementToPdf = async (element: ReactNode, filename: stri
 
     pdf.save(filename);
   } finally {
-    // Cleanup
+    setTimeout(() => {
+      root.unmount();
+      document.body.removeChild(container);
+    }, 100);
+  }
+};
+
+/**
+ * Creates a hidden DOM element, renders a React component into it,
+ * captures it with html2canvas, and returns it as a Blob.
+ */
+export const generateReactElementToPdfBlob = async (element: ReactNode): Promise<Blob> => {
+  const container = document.createElement("div");
+  container.style.position = "absolute";
+  container.style.top = "-9999px";
+  container.style.left = "-9999px";
+  container.style.width = "794px";
+  container.style.backgroundColor = "#ffffff";
+  container.style.color = "#000000";
+  
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await new Promise<void>((resolve) => {
+      root.render(<div id="pdf-export-wrapper-blob" className="bg-white text-black p-8 font-outfit">{element}</div>);
+      setTimeout(resolve, 800);
+    });
+
+    const wrapper = document.getElementById("pdf-export-wrapper-blob");
+    if (!wrapper) throw new Error("Wrapper not found after render");
+
+    const canvas = await html2canvas(wrapper, { 
+      scale: 3,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff",
+    });
+    
+    const imgData = canvas.toDataURL("image/jpeg", 1.0);
+    const pdf = new jsPDF({ format: "a4", unit: "mm" });
+    
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    
+    pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+
+    return pdf.output('blob');
+  } finally {
     setTimeout(() => {
       root.unmount();
       document.body.removeChild(container);

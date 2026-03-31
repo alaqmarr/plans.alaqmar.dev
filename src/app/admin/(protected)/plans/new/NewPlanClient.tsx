@@ -5,6 +5,7 @@ import { createPlan } from "@/app/actions/plans";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Check, X } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function NewPlanClient({ allFeatures }: { allFeatures: any[] }) {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function NewPlanClient({ allFeatures }: { allFeatures: any[] }) {
     
     const totalPercent = paymentTerms.reduce((sum, t) => sum + (t.percent || 0), 0);
     if (totalPercent !== 100) {
-      alert("Payment term percentages must sum to exactly 100%. Currently: " + totalPercent + "%");
+      toast.error(`Payment percentages must sum to 100%. Currently: ${totalPercent}%`);
       setLoading(false);
       return;
     }
@@ -54,10 +55,11 @@ export default function NewPlanClient({ allFeatures }: { allFeatures: any[] }) {
         isPopular: formData.isPopular,
         featureIds: selectedFeatures,
       });
+      toast.success("Plan created successfully!");
       router.push("/admin/plans");
     } catch (error) {
       console.error(error);
-      alert("Failed to create plan");
+      toast.error("Failed to create plan");
       setLoading(false);
     }
   };

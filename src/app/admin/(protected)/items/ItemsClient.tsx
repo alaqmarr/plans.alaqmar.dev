@@ -4,6 +4,8 @@ import { useState } from "react";
 import { createItem, deleteItem, updateItem, importFeaturesToItems } from "@/app/actions/items";
 import { Edit2, Trash2, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { useConfirm } from "@/providers/ConfirmProvider";
 
 export default function ItemsClient({ initialItems }: { initialItems: any[] }) {
   const router = useRouter();
@@ -11,6 +13,7 @@ export default function ItemsClient({ initialItems }: { initialItems: any[] }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: "", description: "", price: "", isOneTime: false });
   const [loading, setLoading] = useState(false);
+  const confirm = useConfirm();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,9 +34,10 @@ export default function ItemsClient({ initialItems }: { initialItems: any[] }) {
       setIsAdding(false);
       setEditingId(null);
       setFormData({ name: "", description: "", price: "", isOneTime: false });
+      toast.success(editingId ? "Custom item updated!" : "Custom item created!");
       router.refresh();
     } catch {
-      alert("Error saving custom item");
+      toast.error("Error saving custom item");
     } finally {
       setLoading(false);
     }
@@ -46,21 +50,22 @@ export default function ItemsClient({ initialItems }: { initialItems: any[] }) {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Delete this custom item?")) {
+    if (await confirm({ title: "Delete Custom Item", message: "Are you sure you want to delete this custom item?", destructive: true })) {
       await deleteItem(id);
+      toast.success("Item deleted");
       router.refresh();
     }
   };
 
   const handleImport = async () => {
-    if (confirm("This will import all global Features into Custom Items. Existing items with the same name will be skipped. Continue?")) {
+    if (await confirm({ title: "Import Global Features", message: "This will import all global Features into Custom Items. Existing items with the same name will be skipped. Continue?" })) {
       setLoading(true);
       try {
         const res = await importFeaturesToItems();
-        alert(res.message);
+        toast.success(res.message);
         router.refresh();
       } catch {
-        alert("Failed to import features.");
+        toast.error("Failed to import features.");
       } finally {
         setLoading(false);
       }

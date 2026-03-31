@@ -82,10 +82,22 @@ model Client {
   email            String?
   phoneNumbers     String[]
   planId           String
-  plan             Plan     @relation(fields: [planId], references: [id])
+  plan             Plan      @relation(fields: [planId], references: [id])
+  invoices         Invoice[]
   offeredPrice     Float
   paymentStructure String   @default("[]") // JSON representing payment milestones
   trackingLink     String   @unique @default(cuid())
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+model Invoice {
+  id              String   @id @default(cuid())
+  invoiceNumber   String   @unique
+  clientId        String
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  milestoneName   String
+  amount          Float
+  fileUrl         String
+  createdAt       DateTime @default(now())
 }

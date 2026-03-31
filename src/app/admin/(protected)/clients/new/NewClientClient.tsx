@@ -5,6 +5,7 @@ import { createClient } from "@/app/actions/clients";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function NewClientClient({ plans }: { plans: any[] }) {
   const router = useRouter();
@@ -80,11 +81,11 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPlanId) return alert("Select a plan first");
+    if (!selectedPlanId) return toast.error("Select a plan first");
     
     // Filter empty phones
     const validPhones = phoneNumbers.filter(p => p.trim() !== "");
-    if (validPhones.length === 0) return alert("Provide at least one phone number");
+    if (validPhones.length === 0) return toast.error("Provide at least one phone number");
 
     setLoading(true);
     try {
@@ -96,10 +97,11 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
         offeredPrice: parseFloat(formData.offeredPrice),
         paymentStructure: JSON.stringify(paymentStructure)
       });
+      toast.success("Client created successfully!");
       router.push("/admin/clients");
     } catch (error) {
       console.error(error);
-      alert("Failed to create client");
+      toast.error("Failed to create client");
       setLoading(false);
     }
   };

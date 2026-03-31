@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Minus, Send, ShoppingCart, Briefcase, Check, X, Download } from "lucide-react";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+import toast from "react-hot-toast";
 import CostBreakdownChart from "@/components/CostBreakdownChart";
 import { exportReactElementToPdf } from "@/lib/pdfGenerator";
 import PrintableQuote from "@/components/pdf/PrintableQuote";
@@ -47,7 +48,7 @@ export default function CustomPlanClient({ items, contactEmail, whatsappNumber }
 
   const handleEnquiry = async (e: React.FormEvent, viaEmail: boolean) => {
     e.preventDefault();
-    if (!formData.name || !formData.email) return alert("Name and Email are required");
+    if (!formData.name || !formData.email) return toast.error("Name and Email are required");
 
     const planSummary = cart.map(c => `${c.item.name} (x${c.quantity})`).join(", ");
     const interest = `Custom Plan for ${tenure} Year${tenure > 1 ? 's' : ''}: ${planSummary}`;
@@ -76,10 +77,10 @@ export default function CustomPlanClient({ items, contactEmail, whatsappNumber }
         setFormData({ name: "", email: "", phone: "", message: "" });
         setTimeout(() => setSuccess(false), 5000);
       } else {
-        alert("Failed to send email enquiry.");
+        toast.error("Failed to send email enquiry.");
       }
     } catch {
-      alert("Error sending enquiry.");
+      toast.error("Error sending enquiry.");
     } finally {
       setSubmitting(false);
       setShowCheckout(false);

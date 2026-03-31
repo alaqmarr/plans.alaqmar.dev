@@ -10,6 +10,8 @@ import WhatsAppFloat from "@/components/WhatsAppFloat";
 import SplashScreen from "@/components/SplashScreen";
 import PageTransition from "@/components/PageTransition";
 import prisma from "@/lib/prisma";
+import { Toaster } from "react-hot-toast";
+import { ConfirmProvider } from "@/providers/ConfirmProvider";
 
 export const preferredRegion = ['sin1']
 
@@ -37,17 +39,33 @@ export default async function RootLayout({
         <CustomCursor />
         <ScrollProgress />
         <Navbar />
-        <main className="flex-1">
-          <PageTransition>
-            {children}
-          </PageTransition>
-        </main>
-        <Footer
-          contactEmail={settings?.contactEmail || process.env.CONTACT_EMAIL || undefined}
-          whatsappNumber={whatsappNumber}
-        />
-        <WhatsAppFloat whatsappNumber={whatsappNumber} />
-        <BackToTop />
+        <ConfirmProvider>
+          <Toaster 
+            position="top-center" 
+            toastOptions={{ 
+              style: { 
+                background: '#18181b', 
+                color: '#fff', 
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '16px',
+                fontFamily: 'var(--font-outfit)',
+                fontSize: '14px',
+                padding: '12px 24px'
+              } 
+            }} 
+          />
+          <main className="flex-1">
+            <PageTransition>
+              {children}
+            </PageTransition>
+          </main>
+          <Footer
+            contactEmail={settings?.contactEmail || process.env.CONTACT_EMAIL || undefined}
+            whatsappNumber={whatsappNumber}
+          />
+          <WhatsAppFloat whatsappNumber={whatsappNumber} />
+          <BackToTop />
+        </ConfirmProvider>
       </body>
     </html>
   );

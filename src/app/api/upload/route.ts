@@ -19,21 +19,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
+    const customFilename = formData.get("filename") as string;
+    const folder = (formData.get("folder") as string) || "payments";
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const extension = file.name.split('.').pop() || "jpg";
-    const filename = `payments/${uniqueSuffix}.${extension}`;
+    
+    // Auto-generate or use the provided custom professional name
+    const finalName = customFilename 
+      ? `${customFilename}.${extension}`
+      : `${uniqueSuffix}.${extension}`;
+      
+    const key = `${folder}/${finalName}`;
 
     const command = new PutObjectCommand({
       Bucket: process.env.R2_BUCKET!,
-      Key: filename,
+      Key: key,
       Body: buffer,
       ContentType: file.type,
     });
 
     await s3Client.send(command);
 
-    const publicUrl = `${process.env.R2_PUBLIC_DOMAIN}/${filename}`;
+    const publicUrl = `${process.env.R2_PUBLIC_DOMAIN}/${key}`;
 
     return NextResponse.json({ url: publicUrl });
   } catch (error) {

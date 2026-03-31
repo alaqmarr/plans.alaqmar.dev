@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { updateSettings } from "@/app/actions/settings";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function SettingsClient({ 
   initialSettings 
@@ -28,10 +29,11 @@ export default function SettingsClient({
     try {
       await updateSettings(formData);
       setSuccess(true);
+      toast.success("Settings saved successfully.");
       router.refresh();
       setTimeout(() => setSuccess(false), 3000);
     } catch {
-      alert("Error saving settings");
+      toast.error("Error saving settings");
     } finally {
       setLoading(false);
     }

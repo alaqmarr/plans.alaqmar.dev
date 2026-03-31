@@ -4,6 +4,8 @@ import { useState } from "react";
 import { createFeature, deleteFeature, updateFeature } from "@/app/actions/features";
 import { Edit2, Trash2, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { useConfirm } from "@/providers/ConfirmProvider";
 
 export default function FeaturesClient({ initialFeatures }: { initialFeatures: any[] }) {
   const router = useRouter();
@@ -11,6 +13,7 @@ export default function FeaturesClient({ initialFeatures }: { initialFeatures: a
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: "", description: "", price: "", isOneTime: false, upgradedById: "" });
   const [loading, setLoading] = useState(false);
+  const confirm = useConfirm();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,9 +27,10 @@ export default function FeaturesClient({ initialFeatures }: { initialFeatures: a
       setIsAdding(false);
       setEditingId(null);
       setFormData({ name: "", description: "", price: "", isOneTime: false, upgradedById: "" });
+      toast.success(editingId ? "Feature updated!" : "Feature created!");
       router.refresh();
     } catch {
-      alert("Error saving feature");
+      toast.error("Error saving feature");
     } finally {
       setLoading(false);
     }
@@ -39,8 +43,9 @@ export default function FeaturesClient({ initialFeatures }: { initialFeatures: a
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Delete this feature?")) {
+    if (await confirm({ title: "Delete Feature", message: "Are you sure you want to delete this feature?", destructive: true })) {
       await deleteFeature(id);
+      toast.success("Feature deleted");
       router.refresh();
     }
   };

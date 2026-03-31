@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { CheckCircle2, Circle, Smartphone, Building2, CreditCard, Copy, Link as LinkIcon, BadgeCheck, Check, Box } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function PublicTrackerClient({ client, settings }: { client: any; settings: any }) {
   let paymentStructure: any[] = [];
@@ -14,7 +15,7 @@ export default function PublicTrackerClient({ client, settings }: { client: any;
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert("Copied to clipboard");
+    toast.success("Copied to clipboard");
   };
 
   const isCompleted = currentDueIdx === -1;
@@ -115,13 +116,22 @@ export default function PublicTrackerClient({ client, settings }: { client: any;
                       </div>
                       
                       {isPaid ? (
-                        <div className="flex items-center justify-between mt-4">
-                          <span className="inline-block px-2.5 py-1 bg-emerald-500/10 text-emerald-400 rounded-md text-xs font-bold uppercase tracking-wider">Paid</span>
-                          {step.screenshotUrl && (
-                            <a href={step.screenshotUrl} target="_blank" rel="noreferrer" className="text-xs font-outfit text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 transition-colors">
-                              <LinkIcon size={14} /> View Receipt
-                            </a>
-                          )}
+                        <div className="flex flex-wrap items-center gap-3 mt-4">
+                          <span className="inline-block px-2.5 py-1 bg-emerald-500/10 text-emerald-400 rounded-md text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">Paid</span>
+                          
+                          <div className="flex items-center gap-2">
+                            {step.screenshotUrl && (
+                              <a href={step.screenshotUrl} target="_blank" rel="noreferrer" className="text-[11px] font-outfit text-zinc-400 hover:text-white flex items-center gap-1.5 transition-colors bg-white/5 hover:bg-white/10 px-2 py-1 rounded-md border border-white/5">
+                                <LinkIcon size={12} /> Payment Proof
+                              </a>
+                            )}
+                            
+                            {step.invoiceUrl && (
+                              <a href={step.invoiceUrl} target="_blank" rel="noreferrer" className="text-[11px] font-outfit text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 transition-colors bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-1 rounded-md border border-emerald-500/20">
+                                <LinkIcon size={12} /> Official Invoice
+                              </a>
+                            )}
+                          </div>
                         </div>
                       ) : isActive && (
                         <div className="mt-5 pt-5 border-t border-white/5 animate-in fade-in">

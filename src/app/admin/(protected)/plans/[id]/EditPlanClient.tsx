@@ -6,6 +6,7 @@ import { togglePlanFeature } from "@/app/actions/features";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Check, X } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function EditPlanClient({ plan, allFeatures }: { plan: any, allFeatures: any[] }) {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function EditPlanClient({ plan, allFeatures }: { plan: any, allFe
 
     const totalPercent = paymentTerms.reduce((sum: number, t: any) => sum + (t.percent || 0), 0);
     if (totalPercent !== 100) {
-      alert("Payment term percentages must sum to exactly 100%. Currently: " + totalPercent + "%");
+      toast.error(`Payment percentages must sum to 100%. Currently: ${totalPercent}%`);
       setLoading(false);
       return;
     }
@@ -52,9 +53,10 @@ export default function EditPlanClient({ plan, allFeatures }: { plan: any, allFe
         validity: formData.validity,
         isPopular: formData.isPopular,
       });
+      toast.success("Plan updated successfully!");
       router.push("/admin/plans");
     } catch {
-      alert("Failed to update plan");
+      toast.error("Failed to update plan");
     } finally {
       setLoading(false);
     }
@@ -63,9 +65,10 @@ export default function EditPlanClient({ plan, allFeatures }: { plan: any, allFe
   const handleToggleFeature = async (featureId: string, currentStatus: boolean) => {
     try {
       await togglePlanFeature(plan.id, featureId, !currentStatus);
+      toast.success(currentStatus ? "Feature removed" : "Feature added");
       router.refresh();
     } catch {
-      alert("Failed to toggle feature");
+      toast.error("Failed to toggle feature");
     }
   };
 

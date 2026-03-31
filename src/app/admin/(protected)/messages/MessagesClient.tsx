@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Send, Copy, CheckCircle2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function MessagesClient({ clients }: { clients: any[] }) {
   const [selectedClientId, setSelectedClientId] = useState("");
@@ -60,7 +61,7 @@ export default function MessagesClient({ clients }: { clients: any[] }) {
   };
 
   const openWhatsApp = () => {
-    if (!client || !selectedPhone) return alert("Select a client and phone number first");
+    if (!client || !selectedPhone) return toast.error("Select a client and phone number first");
     
     // clean phone number
     const cleanPhone = selectedPhone.replace(/\D/g, ''); 

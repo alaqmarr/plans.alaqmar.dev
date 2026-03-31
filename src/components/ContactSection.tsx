@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Send, Check, Mail, Phone, User } from "lucide-react";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+import toast from "react-hot-toast";
 
 interface ContactSectionProps {
   contactEmail?: string;
@@ -16,7 +17,7 @@ export default function ContactSection({ contactEmail, whatsappNumber }: Contact
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (viaEmail: boolean) => {
-    if (!formData.name || !formData.email) return alert("Name and Email are required");
+    if (!formData.name || !formData.email) return toast.error("Name and Email are required");
 
     if (!viaEmail && whatsappNumber) {
       const msg = `Hi! I'd like to get in touch.\n\nName: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\n\nMessage: ${formData.message}`;
@@ -36,9 +37,9 @@ export default function ContactSection({ contactEmail, whatsappNumber }: Contact
         setSuccess(true);
         setFormData({ name: "", email: "", phone: "", message: "" });
         setTimeout(() => setSuccess(false), 5000);
-      } else alert("Failed to send. Please try again.");
+      } else toast.error("Failed to send. Please try again.");
     } catch {
-      alert("Error sending message.");
+      toast.error("Error sending message.");
     } finally {
       setSubmitting(false);
     }

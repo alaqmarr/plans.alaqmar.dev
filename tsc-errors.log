@@ -1,0 +1,3 @@
+src/components/pdf/PrintableComparison.tsx(1,24): error TS2307: Cannot find module 'date-fns' or its corresponding type declarations.
+src/components/pdf/PrintablePlan.tsx(1,24): error TS2307: Cannot find module 'date-fns' or its corresponding type declarations.
+src/components/pdf/PrintableQuote.tsx(1,24): error TS2307: Cannot find module 'date-fns' or its corresponding type declarations.

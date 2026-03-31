@@ -2,11 +2,17 @@
 
 import { useState } from "react";
 import { updateClient, deleteClient } from "@/app/actions/clients";
+import { createInvoice } from "@/app/actions/invoices";
 import { useRouter } from "next/navigation";
+import { generateReactElementToPdfBlob } from "@/lib/pdfGenerator";
+import PrintableInvoice from "@/components/pdf/PrintableInvoice";
 import { CheckCircle2, Circle, Copy, UploadCloud, X, Link as LinkIcon, Trash2, BellRing, BellOff } from "lucide-react";
+import toast from "react-hot-toast";
+import { useConfirm } from "@/providers/ConfirmProvider";
 
 export default function ClientDetailClient({ client }: { client: any }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   
@@ -14,6 +20,7 @@ export default function ClientDetailClient({ client }: { client: any }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMilestoneIdx, setSelectedMilestoneIdx] = useState<number | null>(null);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
   let paymentStructure: any[] = [];
@@ -32,56 +39,128 @@ export default function ClientDetailClient({ client }: { client: any }) {
   const openUploadModal = (idx: number) => {
     setSelectedMilestoneIdx(idx);
     setUploadFile(null);
+    setInvoiceFile(null);
     setIsModalOpen(true);
   };
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!uploadFile || selectedMilestoneIdx === null) return;
+    if (selectedMilestoneIdx === null || (!uploadFile && !invoiceFile)) return;
     
     setUploading(true);
     try {
-      // 1. Upload to R2
-      const formData = new FormData();
-      formData.append("file", uploadFile);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Upload failed");
-      const { url } = await res.json();
-
-      // 2. Update DB JSON structure
       const newStructure = [...paymentStructure];
       newStructure[selectedMilestoneIdx].isPaid = true;
-      newStructure[selectedMilestoneIdx].screenshotUrl = url;
+
+      // 1. Upload Screenshot
+      if (uploadFile) {
+        const formData = new FormData();
+        formData.append("file", uploadFile);
+        formData.append("folder", "payments");
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        if (!res.ok) throw new Error("Upload failed");
+        const { url } = await res.json();
+        newStructure[selectedMilestoneIdx].screenshotUrl = url;
+      }
+
+      // 2. Upload Invoice & Create DB Record
+      if (invoiceFile) {
+        const autoName = invoiceFile.name || `Invoice_${client.name.replace(/[^a-zA-Z0-9]/g, '_')}_${newStructure[selectedMilestoneIdx].name.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+        const formData = new FormData();
+        formData.append("file", invoiceFile, autoName);
+        formData.append("folder", "invoices");
+        formData.append("filename", autoName);
+        
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        if (!res.ok) throw new Error("Invoice upload failed");
+        const { url } = await res.json();
+        newStructure[selectedMilestoneIdx].invoiceUrl = url;
+
+        await createInvoice({
+          clientId: client.id,
+          milestoneName: newStructure[selectedMilestoneIdx].name,
+          amount: newStructure[selectedMilestoneIdx].amount,
+          fileUrl: url
+        });
+      }
 
       await updateClient(client.id, {
         paymentStructure: JSON.stringify(newStructure)
       });
-      
+      toast.success("Payment confirmed!");
       setIsModalOpen(false);
       router.refresh();
     } catch (error) {
       console.error(error);
-      alert("Failed to confirm payment");
+      toast.error("Failed to confirm payment");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleAutoGenerateInvoice = async () => {
+    if (selectedMilestoneIdx === null) return;
+    
+    setUploading(true);
+    const msName = paymentStructure[selectedMilestoneIdx].name;
+    const msAmt = paymentStructure[selectedMilestoneIdx].amount;
+    
+    const invoiceNumber = `TWS-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+    
+    // Attempt parsing settings from the app if possible, or use fallbacks
+    // The user had bank details in schema: bankAccountName, bankAccountNumber, etc.
+    // For now we will use placeholders, or client could fetch them from Settings.
+    // Actually, let's use the DB's env or static defaults since we don't have Settings context here.
+    const element = <PrintableInvoice 
+      invoiceNumber={invoiceNumber}
+      date={new Date()}
+      clientName={client.name}
+      items={[{ description: msName, qty: 1, price: msAmt, total: msAmt }]}
+      subtotal={msAmt}
+      discount={0}
+      grandTotal={msAmt}
+      bankDetails={{
+        payeeName: process.env.NEXT_PUBLIC_BANK_PAYEE || "THE WEB SENSEI",
+        bankName: process.env.NEXT_PUBLIC_BANK_NAME || "INDUSIND BANK",
+        accountNumber: process.env.NEXT_PUBLIC_BANK_ACC || "159618443558",
+        ifsc: process.env.NEXT_PUBLIC_BANK_IFSC || "INDB0000290"
+      }}
+      contact={{
+        phone: process.env.NEXT_PUBLIC_PHONE || "+91 96184 43558",
+        email: process.env.NEXT_PUBLIC_EMAIL || "info@thewebsensei.in",
+        website: process.env.NEXT_PUBLIC_WEBSITE || "https://thewebsensei.in"
+      }}
+    />;
+
+    try {
+      const blob = await generateReactElementToPdfBlob(element);
+      const file = new File([blob], `Auto_Invoice_${msName.replace(/\s+/g,'_')}.pdf`, { type: "application/pdf" });
+      setInvoiceFile(file);
+      toast.success("Invoice Auto-Generated & Attached successfully! You may now confirm payment.");
+    } catch {
+      toast.error("Failed to generate invoice.");
     } finally {
       setUploading(false);
     }
   };
 
   const markUnpaid = async (idx: number) => {
-    if (!confirm("Are you sure you want to mark this as unpaid? This will remove the attached screenshot.")) return;
+    if (!(await confirm({ title: "Mark Unpaid", message: "Are you sure you want to mark this as unpaid? This will remove the attached screenshot.", destructive: true }))) return;
     
     setLoading(true);
     try {
       const newStructure = [...paymentStructure];
       newStructure[idx].isPaid = false;
-      delete newStructure[idx].screenshotUrl; // Remove the URL link
+      delete newStructure[idx].screenshotUrl; 
+      delete newStructure[idx].invoiceUrl; 
       
       await updateClient(client.id, {
         paymentStructure: JSON.stringify(newStructure)
       });
+      toast.success("Milestone marked as unpaid");
       router.refresh();
     } catch {
-      alert("Failed to update status");
+      toast.error("Failed to update status");
     } finally {
       setLoading(false);
     }
@@ -96,22 +175,24 @@ export default function ClientDetailClient({ client }: { client: any }) {
       await updateClient(client.id, {
         paymentStructure: JSON.stringify(newStructure)
       });
+      toast.success(newStructure[idx].isRequested ? "Payment requested!" : "Payment request revoked.");
       router.refresh();
     } catch {
-      alert("Failed to update status");
+      toast.error("Failed to update status");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteClient = async () => {
-    if (!confirm(`Are you sure you want to delete ${client.name}? This action cannot be undone.`)) return;
+    if (!(await confirm({ title: "Delete Client", message: `Are you sure you want to delete ${client.name}? This action cannot be undone.`, destructive: true }))) return;
     setLoading(true);
     try {
       await deleteClient(client.id);
+      toast.success("Client deleted successfully");
       router.push("/admin/clients");
     } catch {
-      alert("Failed to delete client");
+      toast.error("Failed to delete client");
       setLoading(false);
     }
   };
@@ -181,11 +262,16 @@ export default function ClientDetailClient({ client }: { client: any }) {
                     <div className="flex flex-col gap-2 md:items-start group-even:md:items-end">
                       <span className="inline-block px-2.5 py-1 bg-emerald-500/10 text-emerald-400 rounded-md text-xs font-bold uppercase tracking-wider">Paid</span>
                       {step.screenshotUrl && (
-                        <a href={step.screenshotUrl} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
-                          <LinkIcon size={12} /> View Receipt
+                        <a href={step.screenshotUrl} target="_blank" rel="noreferrer" className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 transition-colors">
+                          <LinkIcon size={12} /> Payment Proof
                         </a>
                       )}
-                      <button onClick={() => markUnpaid(idx)} disabled={loading} className="text-[10px] text-zinc-500 hover:text-zinc-300 mt-2 uppercase tracking-wider">
+                      {step.invoiceUrl && (
+                        <a href={step.invoiceUrl} target="_blank" rel="noreferrer" className="text-[11px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors">
+                          <LinkIcon size={12} /> Official Invoice
+                        </a>
+                      )}
+                      <button onClick={() => markUnpaid(idx)} disabled={loading} className="text-[10px] text-zinc-600 hover:text-red-400 mt-2 uppercase tracking-widest transition-colors font-bold">
                         Mark Unpaid
                       </button>
                     </div>
@@ -238,19 +324,52 @@ export default function ClientDetailClient({ client }: { client: any }) {
             <p className="font-outfit text-zinc-400 text-sm mb-6">Attach a payment screenshot to permanently mark "{paymentStructure[selectedMilestoneIdx]?.name}" as paid.</p>
             
             <form onSubmit={handleUploadSubmit} className="space-y-6">
-              <input 
-                type="file" 
-                accept="image/*" 
-                required
-                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                className="w-full text-zinc-300 text-sm font-outfit file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-indigo-500/10 file:text-indigo-400 hover:file:bg-indigo-500/20 file:transition-all"
-              />
+              
+              <div>
+                <label className="font-outfit block text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2 mt-4">1. Payment Proof (Optional)</label>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                  className="w-full text-zinc-300 text-sm font-outfit file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700 file:transition-all border border-white/5 rounded-xl p-1 bg-zinc-950/50"
+                />
+              </div>
+
+              <div>
+                <label className="font-outfit block text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-2 mt-4 flex justify-between items-center">
+                  <span>2. Official Invoice Document (Optional)</span>
+                  <button 
+                    type="button" 
+                    onClick={handleAutoGenerateInvoice}
+                    disabled={uploading}
+                    className="text-emerald-400 hover:text-emerald-300 font-bold bg-emerald-500/10 px-2 py-1 rounded transition-colors"
+                  >
+                    Magic Auto-Generate ✨
+                  </button>
+                </label>
+                {invoiceFile ? (
+                  <div className="flex items-center justify-between bg-emerald-950/20 border border-emerald-500/30 p-3 rounded-xl">
+                    <span className="text-emerald-400 text-sm font-outfit truncate">{invoiceFile.name}</span>
+                    <button type="button" onClick={() => setInvoiceFile(null)} className="text-zinc-500 hover:text-red-400">
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <input 
+                    type="file" 
+                    accept="application/pdf,image/*" 
+                    onChange={(e) => setInvoiceFile(e.target.files?.[0] || null)}
+                    className="w-full text-zinc-300 text-sm font-outfit file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 file:transition-all border border-emerald-500/10 rounded-xl p-1 bg-emerald-950/20"
+                  />
+                )}
+              </div>
+
               <button 
                 type="submit" 
-                disabled={uploading || !uploadFile}
-                className="w-full font-outfit py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white rounded-xl font-bold uppercase tracking-widest text-sm shadow-lg shadow-emerald-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={uploading || (!uploadFile && !invoiceFile)}
+                className="w-full font-outfit py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white rounded-xl font-bold uppercase tracking-widest text-sm shadow-lg shadow-emerald-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-8"
               >
-                {uploading ? "Uploading..." : <><CheckCircle2 size={16} /> Confirm Payment</>}
+                {uploading ? "Uploading Docs..." : <><CheckCircle2 size={16} /> Confirm Payment</>}
               </button>
             </form>
           </div>
