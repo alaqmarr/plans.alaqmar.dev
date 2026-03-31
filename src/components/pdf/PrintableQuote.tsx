@@ -1,19 +1,19 @@
 import { format } from "date-fns";
 
-export default function PrintableQuote({ 
-  cart, 
-  tenure, 
-  totalAmount, 
-  formData 
-}: { 
-  cart: any[], 
-  tenure: number, 
-  totalAmount: number, 
-  formData?: any 
+export default function PrintableQuote({
+  cart,
+  tenure,
+  totalAmount,
+  formData
+}: {
+  cart: any[],
+  tenure: number,
+  totalAmount: number,
+  formData?: any
 }) {
   return (
     <div className="bg-white text-black p-10 min-h-[1100px] flex flex-col relative w-full font-outfit">
-      
+
       {/* Header */}
       <div className="flex justify-between items-start border-b-2 border-indigo-500 pb-6 mb-8">
         <div>
@@ -46,7 +46,7 @@ export default function PrintableQuote({
 
       {/* Quote Summary Table */}
       <h3 className="text-xl font-bold text-zinc-800 mb-4 tracking-tight border-b border-zinc-200 pb-2">Project Scope & Features</h3>
-      
+
       <div className="flex-1">
         <div className="rounded-xl border border-zinc-200 overflow-hidden mb-8">
           <table className="w-full text-left border-collapse">
@@ -92,7 +92,7 @@ export default function PrintableQuote({
         <p className="text-xs font-medium text-zinc-500 mb-1">This is an estimated quote and not a binding contract. Final pricing may vary based on project scope.</p>
         <p className="text-xs font-medium text-zinc-500 mb-4">All prices are in Indian Rupees (INR). Taxes may apply as per applicable laws.</p>
         <div className="bg-indigo-900 text-white font-bold tracking-widest text-[10px] uppercase py-2 w-full absolute bottom-0 left-0 text-center">
-          THE WEB SENSEI | thewebsensei.in
+          THE WEB SENSEI | https://alaqmar.dev
         </div>
       </div>
     </div>

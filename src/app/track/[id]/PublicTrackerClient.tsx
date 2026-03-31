@@ -125,17 +125,26 @@ export default function PublicTrackerClient({ client, settings }: { client: any;
                         </div>
                       ) : isActive && (
                         <div className="mt-5 pt-5 border-t border-white/5 animate-in fade-in">
-                          <p className="text-sm font-outfit text-zinc-400 mb-4">Please transfer the due amount using any preferred UPI app or manual bank transfer below to unlock the next milestone.</p>
-                          
-                          {settings.upiId ? (
-                            <a 
-                              href={`upi://pay?pa=${settings.upiId}&pn=${encodeURIComponent(settings.bankAccountName || "THE WEB SENSEI")}&am=${step.amount}&cu=INR`}
-                              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-6 py-3 bg-[#4285F4] hover:bg-[#3367d6] text-white rounded-xl font-outfit font-bold rounded-xl transition-all shadow-lg shadow-[#4285F4]/20"
-                            >
-                              <Smartphone size={18} /> Pay ₹{step.amount} via UPI App
-                            </a>
+                          {step.isRequested !== false ? (
+                            <>
+                              <p className="text-sm font-outfit text-zinc-400 mb-6 leading-relaxed">Please transfer the due amount using any preferred UPI app or manual bank transfer below to unlock the next milestone.</p>
+                              
+                              {settings.upiId ? (
+                                <a 
+                                  href={`upi://pay?pa=${settings.upiId}&pn=${encodeURIComponent(settings.bankAccountName || "THE WEB SENSEI")}&am=${step.amount}&cu=INR`}
+                                  className="inline-flex w-full sm:w-auto items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-outfit font-extrabold rounded-2xl transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] hover:-translate-y-0.5 uppercase tracking-widest text-sm border border-emerald-400/20"
+                                >
+                                  <Smartphone size={20} className="animate-pulse" /> Pay ₹{step.amount.toLocaleString('en-IN')} via UPI
+                                </a>
+                              ) : (
+                                <div className="text-xs font-outfit text-amber-500 bg-amber-500/10 px-3 py-2 rounded-lg border border-amber-500/20 inline-block">UPI payment not configured. Use bank details below.</div>
+                              )}
+                            </>
                           ) : (
-                            <div className="text-xs font-outfit text-amber-500">UPI payment not configured. Use bank details.</div>
+                            <div className="flex items-center gap-3 text-zinc-400 font-outfit bg-zinc-900/50 p-4 rounded-xl border border-white/5 w-max">
+                              <Circle size={16} className="text-zinc-500" />
+                              <span className="font-semibold tracking-wide">Payment not yet required.</span>
+                            </div>
                           )}
                         </div>
                       )}

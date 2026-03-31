@@ -11,7 +11,7 @@ export default function PrintableComparison({ plans, allFeatures }: { plans: any
 
   return (
     <div className="bg-white text-black p-10 min-h-[1100px] flex flex-col relative w-full font-outfit">
-      
+
       {/* Header */}
       <div className="flex justify-between items-start border-b-2 border-indigo-500 pb-6 mb-8">
         <div>
@@ -54,7 +54,7 @@ export default function PrintableComparison({ plans, allFeatures }: { plans: any
                   {plans.map(plan => {
                     const pf = planFeatures.get(`${plan.id}-${feature.id}`);
                     const isUpgraded = pf?.upgradedById;
-                    
+
                     return (
                       <td key={plan.id} className="p-4 text-center border-r border-zinc-100 last:border-0">
                         {pf ? (
@@ -85,7 +85,7 @@ export default function PrintableComparison({ plans, allFeatures }: { plans: any
       <div className="mt-auto pt-10 border-t border-zinc-200 text-center">
         <p className="text-xs font-medium text-zinc-500 mb-1">Pricing strictly subject to final custom requirements.</p>
         <div className="bg-indigo-900 text-white font-bold tracking-widest text-[10px] uppercase py-2 w-full absolute bottom-0 left-0 text-center">
-          THE WEB SENSEI | thewebsensei.in
+          THE WEB SENSEI | https://alaqmar.dev
         </div>
       </div>
     </div>

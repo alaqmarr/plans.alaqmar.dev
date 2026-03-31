@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { updateClient } from "@/app/actions/clients";
+import { updateClient, deleteClient } from "@/app/actions/clients";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Circle, Copy, UploadCloud, X, Link as LinkIcon } from "lucide-react";
+import { CheckCircle2, Circle, Copy, UploadCloud, X, Link as LinkIcon, Trash2, BellRing, BellOff } from "lucide-react";
 
 export default function ClientDetailClient({ client }: { client: any }) {
   const router = useRouter();
@@ -87,6 +87,35 @@ export default function ClientDetailClient({ client }: { client: any }) {
     }
   };
 
+  const toggleRequested = async (idx: number) => {
+    setLoading(true);
+    try {
+      const newStructure = [...paymentStructure];
+      newStructure[idx].isRequested = !newStructure[idx].isRequested;
+      
+      await updateClient(client.id, {
+        paymentStructure: JSON.stringify(newStructure)
+      });
+      router.refresh();
+    } catch {
+      alert("Failed to update status");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteClient = async () => {
+    if (!confirm(`Are you sure you want to delete ${client.name}? This action cannot be undone.`)) return;
+    setLoading(true);
+    try {
+      await deleteClient(client.id);
+      router.push("/admin/clients");
+    } catch {
+      alert("Failed to delete client");
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Overview Block */}
@@ -117,6 +146,14 @@ export default function ClientDetailClient({ client }: { client: any }) {
             </div>
           </div>
         </div>
+
+        <button 
+          onClick={handleDeleteClient}
+          disabled={loading}
+          className="mt-8 w-full font-outfit text-[10px] font-bold tracking-widest uppercase py-3 border border-red-500/30 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors flex items-center justify-center gap-2"
+        >
+          <Trash2 size={14} /> Delete Client
+        </button>
       </div>
 
       {/* Payment Structure */}
@@ -153,13 +190,31 @@ export default function ClientDetailClient({ client }: { client: any }) {
                       </button>
                     </div>
                   ) : (
-                    <button 
-                      onClick={() => openUploadModal(idx)}
-                      disabled={loading}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
-                    >
-                      <UploadCloud size={14} /> Mark as Paid
-                    </button>
+                    <div className="flex flex-col gap-2 md:items-start group-even:md:items-end">
+                      {step.isRequested ? (
+                         <span className="inline-block px-2 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-md text-[10px] font-bold uppercase tracking-widest mt-1 mb-2">Payment Requested</span>
+                      ) : (
+                         <span className="inline-block px-2 py-1 bg-zinc-500/10 text-zinc-500 border border-zinc-500/20 rounded-md text-[10px] font-bold uppercase tracking-widest mt-1 mb-2">Not Yet Requested</span>
+                      )}
+
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => openUploadModal(idx)}
+                          disabled={loading}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm"
+                        >
+                          <UploadCloud size={14} /> Mark as Paid
+                        </button>
+                        <button 
+                          onClick={() => toggleRequested(idx)}
+                          title="Toggle Payment Request Status"
+                          disabled={loading}
+                          className={`inline-flex items-center p-1.5 rounded-lg border transition-all ${step.isRequested ? 'bg-zinc-800 text-zinc-400 border-white/5 hover:bg-zinc-700' : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'} `}
+                        >
+                          {step.isRequested ? <BellOff size={14} /> : <BellRing size={14} />}
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

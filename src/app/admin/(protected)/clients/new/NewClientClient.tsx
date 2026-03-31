@@ -53,6 +53,7 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
       name: terms[0]?.name || "Advance",
       amount: advanceAmount,
       isPaid: false,
+      isRequested: true,
       percent: advancePercent
     });
 
@@ -68,6 +69,7 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
           name: terms[i]?.name || `Installment ${i}`,
           amount: amountPerStep,
           isPaid: false,
+          isRequested: false,
           percent: percentPerStep
         });
       }

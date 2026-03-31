@@ -11,8 +11,15 @@ export async function createClient(data: {
   offeredPrice: number;
   paymentStructure: string; // JSON string
 }) {
+  const baseSlug = data.name.toLowerCase().replace(/[\s_]+/g, '-').replace(/[^\w-]+/g, '');
+  const randomSuffix = Math.random().toString(36).substring(2, 6);
+  const trackingLink = `${baseSlug}-${randomSuffix}`;
+
   const client = await prisma.client.create({ 
-    data 
+    data: {
+      ...data,
+      trackingLink
+    }
   });
   revalidatePath("/admin/clients");
   return { success: true, client };
