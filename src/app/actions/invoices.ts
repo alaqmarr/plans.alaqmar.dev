@@ -9,6 +9,15 @@ export async function createInvoice(data: {
   amount: number;
   fileUrl: string;
 }) {
+  // Check if an invoice for this exact milestone already exists, to prevent duplicates
+  const existing = await prisma.invoice.findFirst({
+    where: { clientId: data.clientId, milestoneName: data.milestoneName }
+  });
+
+  if (existing) {
+    await prisma.invoice.delete({ where: { id: existing.id } });
+  }
+
   // Generate professional Invoice Number: TWS-{YEAR}-{COUNT}
   const year = new Date().getFullYear();
   const count = await prisma.invoice.count();
