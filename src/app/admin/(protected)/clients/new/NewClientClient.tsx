@@ -44,19 +44,24 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
     if (terms.length === 0) terms = [{ name: "Advance" }];
 
     const structure = [];
-    const advanceAmount = Math.round(price * 0.40);
+    const originalPlanPrice = selectedPlan.discountPrice || selectedPlan.price || 0;
+    const advanceAmount = Math.round(originalPlanPrice * 0.40);
+
+    const advancePercent = price > 0 ? Math.round((advanceAmount / price) * 100) : 40;
 
     structure.push({
       name: terms[0]?.name || "Advance",
       amount: advanceAmount,
       isPaid: false,
-      percent: 40
+      percent: advancePercent
     });
 
     if (terms.length > 1) {
-      const remainingAmount = price - advanceAmount;
+      const remainingAmount = Math.max(0, price - advanceAmount);
       const amountPerStep = Math.round(remainingAmount / (terms.length - 1));
-      const percentPerStep = Math.round(60 / (terms.length - 1));
+      
+      // Calculate adjusted percentages based on the offered price
+      const percentPerStep = price > 0 ? Math.round((amountPerStep / price) * 100) : 0;
 
       for (let i = 1; i < terms.length; i++) {
         structure.push({
