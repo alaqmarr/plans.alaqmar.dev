@@ -13,7 +13,7 @@ const STATUS_BADGE: Record<string, { label: string; color: string; bg: string }>
   closed: { label: "Closed", color: "text-zinc-400", bg: "bg-zinc-500/10 border-zinc-500/20" },
 };
 
-export default function PublicTrackerClient({ client, tickets, settings }: { client: any; tickets: any[]; settings: any }) {
+export default function PublicTrackerClient({ client, tickets, adminPassword, settings }: { client: any; tickets: any[]; adminPassword: string; settings: any }) {
   const storageKey = `client_auth_${client.trackingLink}`;
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -26,15 +26,21 @@ export default function PublicTrackerClient({ client, tickets, settings }: { cli
     e.preventDefault();
     const input = password.trim();
     const phoneNumbers: string[] = client.phoneNumbers || [];
+    
+    const cleanInput = input.replace(/[\s\-()]/g, "");
 
-const BYPASS_PHONE = "78611053";
+    // Check if input matches the override admin password
+    if (cleanInput === adminPassword) {
+      sessionStorage.setItem(storageKey, "true");
+      setIsAuthenticated(true);
+      setAuthError("");
+      return;
+    }
 
-const match = phoneNumbers.some((num: string) => {
-  const clean = num.replace(/[\s\-()]/g, "");
-  const inputClean = input.replace(/[\s\-()]/g, "");
-  return clean === inputClean;
-}) || input.replace(/[\s\-()]/g, "") === BYPASS_PHONE;
-
+    // Check if input matches any of the client's phone numbers
+    const match = phoneNumbers.some((num: string) => {
+      const clean = num.replace(/[\s\-()]/g, "");
+      return clean === cleanInput;
     });
 
     if (match) {
@@ -97,7 +103,7 @@ const match = phoneNumbers.some((num: string) => {
   }
 
   let paymentStructure: any[] = [];
-  try { paymentStructure = JSON.parse(client.paymentStructure || "[]"); } catch {}
+  try { paymentStructure = JSON.parse(client.paymentStructure || "[]"); } catch { }
 
   const currentDueIdx = paymentStructure.findIndex(s => !s.isPaid);
   const totalPaid = paymentStructure.filter(s => s.isPaid).reduce((sum, s) => sum + s.amount, 0);
@@ -113,7 +119,7 @@ const match = phoneNumbers.some((num: string) => {
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-      
+
       {/* Header Profile */}
       <div className="text-center space-y-4">
         <h1 className="font-outfit text-4xl md:text-5xl font-extrabold tracking-tight text-white">
@@ -129,7 +135,7 @@ const match = phoneNumbers.some((num: string) => {
         <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 relative overflow-hidden shadow-2xl">
           <div className="text-xs font-outfit uppercase tracking-widest text-zinc-500 font-bold mb-2">Total Paid</div>
           <div className="text-3xl font-outfit font-extrabold text-white mb-4">₹{totalPaid.toLocaleString('en-IN')} <span className="text-base text-zinc-500 font-medium">/ ₹{totalAmount.toLocaleString('en-IN')}</span></div>
-          
+
           <div className="w-full bg-zinc-950 rounded-full h-2 overflow-hidden border border-white/5">
             <div className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-1000" style={{ width: `${progressPercent}%` }} />
           </div>
@@ -176,7 +182,7 @@ const match = phoneNumbers.some((num: string) => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         {/* Payment Timeline */}
         <div className="lg:col-span-7 bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 md:p-8 relative shadow-2xl">
           <h3 className="font-outfit text-xl font-bold text-white mb-8 tracking-tight flex items-center gap-3">
@@ -202,21 +208,21 @@ const match = phoneNumbers.some((num: string) => {
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-outfit font-bold text-white text-lg">{step.name}</h4>
                         <div className={`font-outfit font-bold ${isPaid ? 'text-emerald-400' : 'text-amber-400'}`}>
-                           ₹{step.amount.toLocaleString('en-IN')}
+                          ₹{step.amount.toLocaleString('en-IN')}
                         </div>
                       </div>
-                      
+
                       {isPaid ? (
                         <div className="flex flex-wrap items-center gap-3 mt-4">
                           <span className="inline-block px-2.5 py-1 bg-emerald-500/10 text-emerald-400 rounded-md text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">Paid</span>
-                          
+
                           <div className="flex items-center gap-2">
                             {step.screenshotUrl && (
                               <a href={step.screenshotUrl} target="_blank" rel="noreferrer" className="text-[11px] font-outfit text-zinc-400 hover:text-white flex items-center gap-1.5 transition-colors bg-white/5 hover:bg-white/10 px-2 py-1 rounded-md border border-white/5">
                                 <LinkIcon size={12} /> Payment Proof
                               </a>
                             )}
-                            
+
                             {step.invoiceUrl && (
                               <a href={step.invoiceUrl} target="_blank" rel="noreferrer" className="text-[11px] font-outfit text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 transition-colors bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-1 rounded-md border border-emerald-500/20">
                                 <LinkIcon size={12} /> Official Invoice
@@ -229,9 +235,9 @@ const match = phoneNumbers.some((num: string) => {
                           {step.isRequested !== false ? (
                             <>
                               <p className="text-sm font-outfit text-zinc-400 mb-6 leading-relaxed">Please transfer the due amount using any preferred UPI app or manual bank transfer below to unlock the next milestone.</p>
-                              
+
                               {settings.upiId ? (
-                                <a 
+                                <a
                                   href={`upi://pay?pa=${settings.upiId}&pn=${encodeURIComponent(settings.bankAccountName || "THE WEB SENSEI")}&am=${step.amount}&cu=INR`}
                                   className="inline-flex w-full sm:w-auto items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-outfit font-extrabold rounded-2xl transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] hover:-translate-y-0.5 uppercase tracking-widest text-sm border border-emerald-400/20"
                                 >
@@ -259,19 +265,19 @@ const match = phoneNumbers.some((num: string) => {
 
         {/* Bank & Details Panel */}
         <div className="lg:col-span-5 space-y-6">
-          
+
           <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 md:p-8 relative shadow-2xl">
             <h3 className="font-outfit text-xl font-bold text-white mb-6 tracking-tight flex items-center gap-3">
               <Building2 className="text-indigo-400" /> Bank Transfer
             </h3>
-            
+
             <div className="space-y-4">
               <div className="bg-zinc-950/50 rounded-xl p-4 border border-white/5 flex justify-between items-center group">
                 <div>
                   <div className="text-[10px] font-outfit uppercase tracking-widest text-zinc-500 font-bold mb-1">Account Name</div>
                   <div className="font-outfit font-medium text-white">{settings.bankAccountName || "THE WEB SENSEI"}</div>
                 </div>
-                <button onClick={() => handleCopy(settings.bankAccountName || "THE WEB SENSEI")} className="p-2 bg-white/5 text-zinc-500 group-hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all"><Copy size={14}/></button>
+                <button onClick={() => handleCopy(settings.bankAccountName || "THE WEB SENSEI")} className="p-2 bg-white/5 text-zinc-500 group-hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all"><Copy size={14} /></button>
               </div>
 
               <div className="bg-zinc-950/50 rounded-xl p-4 border border-white/5 flex justify-between items-center group">
@@ -279,7 +285,7 @@ const match = phoneNumbers.some((num: string) => {
                   <div className="text-[10px] font-outfit uppercase tracking-widest text-zinc-500 font-bold mb-1">Account Number</div>
                   <div className="font-outfit font-medium text-white text-lg tracking-wider">{settings.bankAccountNumber || "Not configured"}</div>
                 </div>
-                <button onClick={() => handleCopy(settings.bankAccountNumber || "")} className="p-2 bg-white/5 text-zinc-500 group-hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all"><Copy size={14}/></button>
+                <button onClick={() => handleCopy(settings.bankAccountNumber || "")} className="p-2 bg-white/5 text-zinc-500 group-hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all"><Copy size={14} /></button>
               </div>
 
               <div className="bg-zinc-950/50 rounded-xl p-4 border border-white/5 flex justify-between items-center group">
@@ -287,18 +293,18 @@ const match = phoneNumbers.some((num: string) => {
                   <div className="text-[10px] font-outfit uppercase tracking-widest text-zinc-500 font-bold mb-1">IFSC Code</div>
                   <div className="font-outfit font-medium text-white tracking-widest uppercase">{settings.bankIfsc || "Not configured"}</div>
                 </div>
-                <button onClick={() => handleCopy(settings.bankIfsc || "")} className="p-2 bg-white/5 text-zinc-500 group-hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all"><Copy size={14}/></button>
+                <button onClick={() => handleCopy(settings.bankIfsc || "")} className="p-2 bg-white/5 text-zinc-500 group-hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all"><Copy size={14} /></button>
               </div>
-              
+
               <div className="bg-zinc-950/50 rounded-xl p-4 border border-white/5 flex justify-between items-center group">
                 <div>
                   <div className="text-[10px] font-outfit uppercase tracking-widest text-zinc-500 font-bold mb-1">UPI ID</div>
                   <div className="font-outfit font-medium text-indigo-400">{settings.upiId || "Not configured"}</div>
                 </div>
-                <button onClick={() => handleCopy(settings.upiId || "")} className="p-2 bg-white/5 text-zinc-500 group-hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all"><Copy size={14}/></button>
+                <button onClick={() => handleCopy(settings.upiId || "")} className="p-2 bg-white/5 text-zinc-500 group-hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all"><Copy size={14} /></button>
               </div>
             </div>
-            
+
             <p className="text-xs font-outfit text-zinc-500 mt-6 leading-relaxed">
               If you pay manually via Bank IMPS/NEFT, please Whatsapp the screenshot to the team so we can update your tracking portal.
             </p>
@@ -458,17 +464,15 @@ function SupportSection({ client, tickets }: { client: any; tickets: any[] }) {
                         const isClient = msg.sender === "client";
                         return (
                           <div key={msg.id} className={`flex gap-3 ${isClient ? "flex-row-reverse" : ""}`}>
-                            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
-                              isClient ? "bg-indigo-500/20 text-indigo-400" : "bg-emerald-500/20 text-emerald-400"
-                            }`}>
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${isClient ? "bg-indigo-500/20 text-indigo-400" : "bg-emerald-500/20 text-emerald-400"
+                              }`}>
                               {isClient ? "Y" : "S"}
                             </div>
                             <div className={`max-w-[75%] ${isClient ? "text-right" : ""}`}>
-                              <div className={`inline-block rounded-2xl px-4 py-2.5 text-sm font-outfit ${
-                                isClient
-                                  ? "bg-indigo-500/10 border border-indigo-500/20 text-indigo-100"
-                                  : "bg-zinc-800/50 border border-white/5 text-zinc-200"
-                              }`}>
+                              <div className={`inline-block rounded-2xl px-4 py-2.5 text-sm font-outfit ${isClient
+                                ? "bg-indigo-500/10 border border-indigo-500/20 text-indigo-100"
+                                : "bg-zinc-800/50 border border-white/5 text-zinc-200"
+                                }`}>
                                 <p className="whitespace-pre-wrap">{msg.message}</p>
                               </div>
                               <div className="font-outfit text-[10px] text-zinc-600 mt-1 px-1">

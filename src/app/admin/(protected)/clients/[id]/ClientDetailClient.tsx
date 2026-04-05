@@ -20,6 +20,7 @@ export default function ClientDetailClient({ client }: { client: any }) {
   const [selectedMilestoneIdx, setSelectedMilestoneIdx] = useState<number | null>(null);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
+  const [generatedInvoiceNumber, setGeneratedInvoiceNumber] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   let paymentStructure: any[] = [];
@@ -39,6 +40,7 @@ export default function ClientDetailClient({ client }: { client: any }) {
     setSelectedMilestoneIdx(idx);
     setUploadFile(null);
     setInvoiceFile(null);
+    setGeneratedInvoiceNumber(null);
     setIsModalOpen(true);
   };
 
@@ -79,7 +81,8 @@ export default function ClientDetailClient({ client }: { client: any }) {
           clientId: client.id,
           milestoneName: newStructure[selectedMilestoneIdx].name,
           amount: newStructure[selectedMilestoneIdx].amount,
-          fileUrl: url
+          fileUrl: url,
+          ...(generatedInvoiceNumber ? { invoiceNumber: generatedInvoiceNumber } : {})
         });
       }
 
@@ -128,6 +131,7 @@ export default function ClientDetailClient({ client }: { client: any }) {
       });
       const file = new File([blob], `Auto_Invoice_${msName.replace(/\s+/g,'_')}.pdf`, { type: "application/pdf" });
       setInvoiceFile(file);
+      setGeneratedInvoiceNumber(invoiceNumber);
       toast.success("Invoice auto-generated! You may now confirm payment.");
     } catch {
       toast.error("Failed to generate invoice.");
@@ -328,25 +332,34 @@ export default function ClientDetailClient({ client }: { client: any }) {
               </div>
 
               <div>
-                <label className="font-outfit block text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-2 mt-4 flex justify-between items-center">
-                  <span>2. Official Invoice Document (Optional)</span>
-                  <button 
-                    type="button" 
-                    onClick={handleAutoGenerateInvoice}
-                    disabled={uploading}
-                    className="text-emerald-400 hover:text-emerald-300 font-bold bg-emerald-500/10 px-2 py-1 rounded transition-colors"
-                  >
-                    Magic Auto-Generate ✨
-                  </button>
+                <label className="font-outfit block text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-2 mt-4">
+                  2. Official Invoice Document (Optional)
                 </label>
-                {invoiceFile ? (
-                  <div className="flex items-center justify-between bg-emerald-950/20 border border-emerald-500/30 p-3 rounded-xl">
-                    <span className="text-emerald-400 text-sm font-outfit truncate">{invoiceFile.name}</span>
-                    <button type="button" onClick={() => setInvoiceFile(null)} className="text-zinc-500 hover:text-red-400">
-                      <X size={16} />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4">
+                    <button
+                      type="button"
+                      disabled={uploading}
+                      onClick={handleAutoGenerateInvoice}
+                      className="flex-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-outfit text-sm font-bold tracking-widest rounded-xl py-3 border border-transparent transition-colors flex items-center justify-center gap-2"
+                    >
+                      🪄 Magic Auto-Generate ✨
                     </button>
                   </div>
-                ) : (
+                  {invoiceFile && (
+                    <div className="text-emerald-400 font-outfit text-xs font-bold text-center flex items-center justify-center gap-2 bg-emerald-950/20 border border-emerald-500/30 p-3 rounded-xl">
+                       <CheckCircle2 size={16} /> 
+                       <span className="truncate">{invoiceFile.name}</span>
+                       <button type="button" onClick={() => window.open(URL.createObjectURL(invoiceFile))} className="text-indigo-400 hover:text-indigo-300 ml-2 underline shrink-0">
+                         View PDF
+                       </button>
+                       <button type="button" onClick={() => { setInvoiceFile(null); setGeneratedInvoiceNumber(null); }} className="text-zinc-500 hover:text-red-400 ml-2">
+                         <X size={16} />
+                       </button>
+                    </div>
+                  )}
+                </div>
+                {!invoiceFile && (
                   <input 
                     type="file" 
                     accept="application/pdf,image/*" 

@@ -70,6 +70,7 @@ export default async function TrackingPage({ params }: { params: Promise<{ id: s
         <PublicTrackerClient
           client={client}
           tickets={tickets}
+          adminPassword={process.env.ADMIN_TRACK_PASSWORD || "919618443558"}
           settings={{
             upiId: settings?.upiId || "",
             bankAccountName: settings?.bankAccountName || "",

@@ -92,7 +92,7 @@ export default function NewInvoiceClient({ clients, settings }: { clients: any[]
       const newStructure = [...paymentStructure];
       newStructure[milestoneIdx].invoiceUrl = url;
       await updateClient(client.id, { paymentStructure: JSON.stringify(newStructure) });
-      await createInvoice({ clientId: client.id, milestoneName: msName, amount: msAmt, fileUrl: url });
+      await createInvoice({ clientId: client.id, milestoneName: msName, amount: msAmt, fileUrl: url, invoiceNumber });
 
       toast.success("Invoice generated and attached successfully!");
       router.push("/admin/invoices");
