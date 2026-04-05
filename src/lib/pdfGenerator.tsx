@@ -117,12 +117,23 @@ function buildInvoicePdf(data: InvoiceData): jsPDF {
   const H = pdf.internal.pageSize.getHeight();  // 297
   const M = 20; // margin
   const CW = W - 2 * M; // 170
-
   // ── Watermark ──
+  const wmText = "THE WEB SENSEI";
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(65);
-  pdf.setTextColor(240, 249, 244); // Very light green accent
-  pdf.text("THE WEB SENSEI", W / 2, H / 2, { align: "center", angle: 45 });
+  pdf.setFontSize(55); // slightly smaller to fit better diagonally
+  pdf.setTextColor(242, 250, 246); // Very light green accent
+  
+  // Calculate text dimensions to center it manually
+  const textWidth = pdf.getStringUnitWidth(wmText) * pdf.getFontSize() / pdf.internal.scaleFactor;
+  // For a 45 degree angle, we offset by half the width and height
+  // In jsPDF, when rotating, it rotates around the starting coordinate (bottom-left of text).
+  const angleRad = (45 * Math.PI) / 180;
+  
+  // To center the text exactly at W/2, H/2:
+  const startX = (W / 2) - (Math.cos(angleRad) * (textWidth / 2));
+  const startY = (H / 2) + (Math.sin(angleRad) * (textWidth / 2));
+
+  pdf.text(wmText, startX, startY, { angle: 45 });
 
   // ── Top Bar ──
   pdf.setFillColor(...C.accent);
