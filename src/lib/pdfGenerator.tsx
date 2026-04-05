@@ -118,93 +118,104 @@ function buildInvoicePdf(data: InvoiceData): jsPDF {
   const M = 20; // margin
   const CW = W - 2 * M; // 170
 
+  // ── Watermark ──
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(65);
+  pdf.setTextColor(240, 249, 244); // Very light green accent
+  pdf.text("THE WEB SENSEI", W / 2, H / 2, { align: "center", angle: 45 });
+
   // ── Top Bar ──
   pdf.setFillColor(...C.accent);
-  pdf.rect(0, 0, W, 3, 'F');
+  pdf.rect(0, 0, W, 4, 'F');
 
   // ── Header ──
-  let y = 16;
+  let y = 20;
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(22);
+  pdf.setFontSize(24);
   pdf.setTextColor(...C.accent);
   pdf.text("THE WEB SENSEI", M, y);
 
-  pdf.setFontSize(7);
+  pdf.setFontSize(8);
   pdf.setTextColor(...C.light);
-  pdf.text("SECUNDERABAD 500015, TELANGANA", M, y + 7);
+  pdf.text("SECUNDERABAD 500015, TELANGANA", M, y + 6);
 
-  pdf.setFontSize(24);
+  pdf.setFontSize(26);
   pdf.setTextColor(...C.dark);
   pdf.text("INVOICE", W - M, y, { align: "right" });
 
-  pdf.setFontSize(9);
+  pdf.setFontSize(10);
   pdf.setTextColor(...C.accent);
-  pdf.text(`#${data.invoiceNumber}`, W - M, y + 7, { align: "right" });
+  pdf.text(`#${data.invoiceNumber}`, W - M, y + 6, { align: "right" });
 
   // ── Divider ──
-  y = 34;
+  y = 36;
   pdf.setDrawColor(...C.border);
-  pdf.setLineWidth(0.3);
+  pdf.setLineWidth(0.4);
   pdf.line(M, y, W - M, y);
 
   // ── Billed To & Meta ──
-  y = 42;
-  pdf.setFontSize(6.5);
+  y = 48;
+  pdf.setFontSize(7);
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(...C.light);
   pdf.text("BILLED TO", M, y);
 
-  pdf.setFontSize(13);
+  pdf.setFontSize(14);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(...C.dark);
-  pdf.text(data.clientName.toUpperCase(), M, y + 6);
+  const clientNameLines = pdf.splitTextToSize(data.clientName.toUpperCase(), CW / 2);
+  pdf.text(clientNameLines, M, y + 7);
 
   // Right side meta
   const rx = W - M;
-  pdf.setFontSize(6.5);
+  pdf.setFontSize(7);
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(...C.light);
   pdf.text("DATE", rx - 44, y, { align: "right" });
-  pdf.setFontSize(9);
+  pdf.setFontSize(10);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(...C.dark);
   pdf.text(fmtDate(data.date), rx, y, { align: "right" });
 
-  pdf.setFontSize(6.5);
+  pdf.setFontSize(7);
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(...C.light);
-  pdf.text("INVOICE NO", rx - 44, y + 6, { align: "right" });
-  pdf.setFontSize(9);
+  pdf.text("INVOICE NO", rx - 44, y + 8, { align: "right" });
+  pdf.setFontSize(10);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(...C.dark);
-  pdf.text(data.invoiceNumber, rx, y + 6, { align: "right" });
+  pdf.text(data.invoiceNumber, rx, y + 8, { align: "right" });
 
   // ── Items Table ──
-  y = 60;
+  y = 75;
   const cols = { desc: M + 5, qty: M + CW * 0.55, rate: M + CW * 0.75, amt: W - M - 5 };
 
   // Header row
   pdf.setFillColor(...C.accent);
-  pdf.roundedRect(M, y, CW, 10, 2, 2, 'F');
+  pdf.roundedRect(M, y, CW, 12, 2, 2, 'F');
 
-  pdf.setFontSize(7.5);
+  pdf.setFontSize(8);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(...C.white);
-  const hy = y + 6.5;
+  const hy = y + 7.5;
   pdf.text("DESCRIPTION", cols.desc, hy);
   pdf.text("QTY", cols.qty, hy, { align: "center" });
   pdf.text("RATE", cols.rate, hy, { align: "right" });
   pdf.text("AMOUNT", cols.amt, hy, { align: "right" });
 
   // Data rows
-  y += 12;
+  y += 16;
   data.items.forEach((item) => {
-    const ry = y + 6;
-    pdf.setFontSize(9);
-
+    // text wrapping for description
+    pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
+    const descLines = pdf.splitTextToSize(item.description, CW * 0.5);
+    
+    // ry is the starting y for this row
+    const ry = y + 5;
+    
     pdf.setTextColor(...C.dark);
-    pdf.text(item.description, cols.desc, ry);
+    pdf.text(descLines, cols.desc, ry);
 
     pdf.setTextColor(...C.mid);
     pdf.text(item.qty.toString(), cols.qty, ry, { align: "center" });
@@ -214,124 +225,130 @@ function buildInvoicePdf(data: InvoiceData): jsPDF {
     pdf.setTextColor(...C.dark);
     pdf.text(`${formatINR(item.total)}`, cols.amt, ry, { align: "right" });
 
-    y += 10;
+    // increment y based on number of lines
+    y += (descLines.length * 5) + 8;
+    
     pdf.setDrawColor(...C.border);
-    pdf.setLineWidth(0.15);
+    pdf.setLineWidth(0.2);
     pdf.line(M + 3, y, W - M - 3, y);
   });
 
   // ── Totals ──
-  const tY = Math.max(y + 35, 155);
+  const tY = Math.max(y + 20, 160);
   pdf.setDrawColor(...C.border);
-  pdf.setLineWidth(0.3);
-  pdf.line(W - M - 80, tY - 4, W - M, tY - 4);
+  pdf.setLineWidth(0.4);
+  pdf.line(W - M - 80, tY - 6, W - M, tY - 6);
 
-  pdf.setFontSize(8);
+  pdf.setFontSize(9);
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(...C.mid);
-  pdf.text("SUBTOTAL", W - M - 44, tY, { align: "right" });
+  pdf.text("SUBTOTAL", W - M - 46, tY, { align: "right" });
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(...C.dark);
   pdf.text(formatINR(data.subtotal), W - M - 5, tY, { align: "right" });
 
   let cY = tY;
   if (data.discount > 0) {
-    cY += 7;
+    cY += 8;
     pdf.setFont("helvetica", "normal");
     pdf.setTextColor(...C.mid);
-    pdf.text("DISCOUNT", W - M - 44, cY, { align: "right" });
+    pdf.text("DISCOUNT", W - M - 46, cY, { align: "right" });
     pdf.setFont("helvetica", "bold");
     pdf.setTextColor(...C.accent);
     pdf.text(`-${formatINR(data.discount)}`, W - M - 5, cY, { align: "right" });
   }
 
-  cY += 5;
+  cY += 6;
   pdf.setDrawColor(...C.border);
   pdf.line(W - M - 80, cY, W - M, cY);
 
-  cY += 8;
-  pdf.setFontSize(9);
+  cY += 10;
+  pdf.setFontSize(11);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(...C.dark);
-  pdf.text("GRAND TOTAL", W - M - 44, cY, { align: "right" });
-  pdf.setFontSize(16);
+  pdf.text("GRAND TOTAL", W - M - 46, cY, { align: "right" });
+  pdf.setFontSize(18);
   pdf.setTextColor(...C.accent);
   pdf.text(formatINR(data.grandTotal), W - M - 5, cY + 1, { align: "right" });
 
   // ── Bank Details & Terms ──
-  const bY = H - 60;
-  const bH = 30;
-  const bGap = 5;
+  const bY = H - 75;
+  const bH = 34;
+  const bGap = 6;
   const bW = (CW - bGap) / 2;
 
   // Bank box
   pdf.setFillColor(...C.accentL);
-  pdf.roundedRect(M, bY, bW, bH, 2, 2, 'F');
+  pdf.roundedRect(M, bY, bW, bH, 3, 3, 'F');
 
-  pdf.setFontSize(6);
+  pdf.setFontSize(7);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(...C.accent);
-  pdf.text("PAYMENT DETAILS", M + 6, bY + 7);
+  pdf.text("PAYMENT DETAILS", M + 6, bY + 8);
 
-  pdf.setFontSize(7.5);
-  let bkY = bY + 13;
+  pdf.setFontSize(8.5);
+  let bkY = bY + 15;
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(...C.mid);
   pdf.text("Payee:", M + 6, bkY);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(...C.dark);
-  pdf.text(data.bankDetails.payeeName, M + 22, bkY);
+  pdf.text(data.bankDetails.payeeName, M + 24, bkY);
 
-  bkY += 5;
+  bkY += 6;
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(...C.mid);
   pdf.text("A/C No:", M + 6, bkY);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(...C.dark);
-  pdf.text(data.bankDetails.accountNumber, M + 22, bkY);
+  pdf.text(data.bankDetails.accountNumber, M + 24, bkY);
 
-  bkY += 5;
+  bkY += 6;
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(...C.mid);
   pdf.text("IFSC:", M + 6, bkY);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(...C.dark);
-  pdf.text(data.bankDetails.ifsc, M + 22, bkY);
+  pdf.text(data.bankDetails.ifsc, M + 24, bkY);
 
   // Terms box
   const tX = M + bW + bGap;
   pdf.setFillColor(...C.accentL);
-  pdf.roundedRect(tX, bY, bW, bH, 2, 2, 'F');
-
-  pdf.setFontSize(6);
-  pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(...C.accent);
-  pdf.text("NOTE & TERMS", tX + 6, bY + 7);
+  pdf.roundedRect(tX, bY, bW, bH, 3, 3, 'F');
 
   pdf.setFontSize(7);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(...C.accent);
+  pdf.text("NOTE & TERMS", tX + 6, bY + 8);
+
+  pdf.setFontSize(8);
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(...C.mid);
   const tLines = [
-    "This is a system-generated invoice and does not",
-    "require a physical signature.",
-    "",
     "Payment is due immediately upon receipt.",
     "",
     "All quoted figures are final and bound by the",
     "initial contract agreement.",
   ];
-  let tlY = bY + 13;
-  tLines.forEach((l) => { pdf.text(l, tX + 6, tlY); tlY += 3.2; });
+  let tlY = bY + 15;
+  tLines.forEach((l) => { pdf.text(l, tX + 6, tlY); tlY += 4; });
+
+  // ── Computer Generated Disclaimer ──
+  const dY = H - 35;
+  pdf.setFontSize(8.5);
+  pdf.setFont("helvetica", "italic");
+  pdf.setTextColor(...C.mid);
+  pdf.text("This is a computer generated invoice and does not require a signature.", W / 2, dY, { align: "center" });
 
   // ── Footer ──
-  const fY = H - 22;
+  const fY = H - 24;
   pdf.setFillColor(...C.dark);
   pdf.rect(0, fY, W, 30, 'F');
 
-  pdf.setFontSize(7.5);
+  pdf.setFontSize(8.5);
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(...C.white);
-  const fcY = fY + 7;
+  const fcY = fY + 8;
   pdf.text(data.contact.phone, M, fcY);
   pdf.text(data.contact.email, W / 2, fcY, { align: "center" });
   pdf.text(data.contact.website, W - M, fcY, { align: "right" });
