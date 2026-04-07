@@ -2,17 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const s3Client = new S3Client({
-  region: "auto",
-  endpoint: process.env.R2_ENDPOINT!,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-  },
-});
-
 export async function POST(req: NextRequest) {
   try {
+    const bucket = process.env.R2_BUCKET;
+    if (!bucket) {
+      throw new Error("R2_BUCKET is strictly undefined in the environment.");
+    }
+
+    const s3Client = new S3Client({
+      region: "auto",
+      endpoint: process.env.R2_ENDPOINT!,
+      credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+      },
+    });
+
     const { filename, folder, fileType } = await req.json();
 
     if (!filename || !fileType) {
@@ -27,14 +32,12 @@ export async function POST(req: NextRequest) {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     
     let finalName = safeFile.endsWith(`.${extension}`) ? safeFile : `${safeFile}.${extension}`;
-    // fallback unique if duplicate processing preferred, but overwriting is fine
-    // just to be safe:
     finalName = `${uniqueSuffix}_${finalName}`;
 
     const key = `${safeFolder}/${finalName}`;
 
     const command = new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET!,
+      Bucket: bucket,
       Key: key,
       ContentType: fileType,
     });

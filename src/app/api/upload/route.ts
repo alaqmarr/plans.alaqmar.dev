@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
-const s3Client = new S3Client({
-  region: "auto",
-  endpoint: process.env.R2_ENDPOINT!,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-  },
-});
-
 export async function POST(req: NextRequest) {
   try {
+    const bucket = process.env.R2_BUCKET;
+    if (!bucket) throw new Error("R2_BUCKET is strictly undefined.");
+
+    const s3Client = new S3Client({
+      region: "auto",
+      endpoint: process.env.R2_ENDPOINT!,
+      credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+      },
+    });
     const formData = await req.formData();
     const file = formData.get("file") as File;
 
@@ -40,7 +42,7 @@ export async function POST(req: NextRequest) {
     const key = `${folder}/${finalName}`;
 
     const command = new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET!,
+      Bucket: bucket,
       Key: key,
       Body: buffer,
       ContentType: file.type,
