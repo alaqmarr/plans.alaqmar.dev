@@ -134,6 +134,59 @@ export default function PublicTrackerClient({
     { id: "agreement", label: "Agreement", icon: ScrollText },
   ];
 
+  const alerts = [];
+
+  if (agreement && agreement.adminSignedAt && !agreement.clientSignedAt) {
+    alerts.push({
+      id: "signature",
+      title: "Signature Required",
+      message: "Please review the agreement and provide your authorised signature.",
+      icon: PenLine,
+      color: "text-amber-400",
+      bg: "bg-amber-500/10",
+      border: "border-amber-500/20",
+      badge: "Action Required",
+      badgeColor: "bg-amber-500 text-amber-950",
+      action: () => setActiveTab("agreement"),
+      buttonText: "Sign Now"
+    });
+  }
+
+  if (currentDueIdx >= 0) {
+    const dueStep = paymentStructure[currentDueIdx];
+    const upiLink = settings?.upiId ? `upi://pay?pa=${settings.upiId}&pn=${encodeURIComponent(settings.bankAccountName || "THE WEB SENSEI")}&am=${dueStep.amount}&cu=INR&tn=${encodeURIComponent(upiNote)}` : undefined;
+    alerts.push({
+      id: "payment",
+      title: "Payment Requested",
+      message: `Milestone: ${dueStep.name} (₹${dueStep.amount.toLocaleString("en-IN")})`,
+      icon: CreditCard,
+      color: "text-blue-400",
+      bg: "bg-blue-500/10",
+      border: "border-blue-500/20",
+      badge: "Action Required",
+      badgeColor: "bg-blue-500 text-blue-950",
+      action: upiLink ? null : () => setActiveTab("overview"),
+      href: upiLink,
+      buttonText: upiLink ? "Pay via UPI" : "View Details"
+    });
+  }
+
+  if (agreement && agreement.clientSignedAt && !agreement.adminVerified) {
+    alerts.push({
+      id: "verification",
+      title: "Verifying Signature",
+      message: "We're validating your signature. Your PDF copy will be ready shortly.",
+      icon: ShieldCheck,
+      color: "text-emerald-400",
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-500/20",
+      badge: "Processing",
+      badgeColor: "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20",
+      action: null,
+      buttonText: ""
+    });
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000">
       {/* Header */}
@@ -145,6 +198,42 @@ export default function PublicTrackerClient({
           Track the development progress and payment milestones for your <strong className="text-white">{client.plan?.name}</strong>.
         </p>
       </div>
+
+      {/* Stacked Notifications */}
+      {alerts.length > 0 && (
+        <div className="max-w-3xl mx-auto space-y-3 px-4">
+          {alerts.map(alert => {
+            const Icon = alert.icon;
+            return (
+              <div key={alert.id} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-3xl backdrop-blur-3xl shadow-2xl ${alert.bg} ${alert.border} border gap-4 transition-all duration-500`}>
+                <div className="flex items-start sm:items-center gap-4">
+                  <div className={`p-3.5 rounded-2xl bg-black/20 shrink-0 ${alert.color} border border-white/5`}>
+                    <Icon size={22} className="drop-shadow-lg" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`inline-block px-2 py-0.5 rounded-md text-[9px] font-outfit font-black uppercase tracking-widest ${alert.badgeColor}`}>
+                        {alert.badge}
+                      </span>
+                    </div>
+                    <h4 className={`font-outfit text-base font-bold ${alert.color}`}>{alert.title}</h4>
+                    <p className="font-outfit text-sm text-zinc-300 mt-0.5 flex-1">{alert.message}</p>
+                  </div>
+                </div>
+                {alert.href ? (
+                  <a href={alert.href} className={`w-full sm:w-auto shrink-0 px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white rounded-xl font-outfit text-xs font-black uppercase tracking-widest transition-all border border-emerald-400/20 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2`}>
+                    <Smartphone size={14} className="animate-pulse" /> {alert.buttonText}
+                  </a>
+                ) : alert.action && (
+                  <button onClick={alert.action} className={`w-full sm:w-auto shrink-0 px-5 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-outfit text-xs font-bold uppercase tracking-widest transition-all border border-white/5 shadow-lg flex items-center justify-center gap-2`}>
+                    {alert.buttonText} <ChevronRight size={14} />
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Tab Bar */}
       <div className="flex gap-2 bg-zinc-900/60 border border-white/5 rounded-2xl p-1.5 w-fit mx-auto">
