@@ -6,6 +6,7 @@ import { createInvoice } from "@/app/actions/invoices";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { generateInvoicePdfBlob } from "@/lib/pdfGenerator";
+import { uploadFileToR2 } from "@/lib/uploadHelper";
 import { CheckCircle2, Circle, Copy, UploadCloud, X, Link as LinkIcon, Trash2, BellRing, BellOff, ScrollText } from "lucide-react";
 import toast from "react-hot-toast";
 import { useConfirm } from "@/providers/ConfirmProvider";
@@ -56,26 +57,14 @@ export default function ClientDetailClient({ client, settings }: { client: any; 
 
       // 1. Upload Screenshot
       if (uploadFile) {
-        const formData = new FormData();
-        formData.append("file", uploadFile);
-        formData.append("folder", "payments");
-        const res = await fetch("/api/upload", { method: "POST", body: formData });
-        if (!res.ok) throw new Error("Upload failed");
-        const { url } = await res.json();
+        const url = await uploadFileToR2(uploadFile, "payments");
         newStructure[selectedMilestoneIdx].screenshotUrl = url;
       }
 
       // 2. Upload Invoice & Create DB Record
       if (invoiceFile) {
         const autoName = invoiceFile.name || `Invoice_${client.name.replace(/[^a-zA-Z0-9]/g, '_')}_${newStructure[selectedMilestoneIdx].name.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-        const formData = new FormData();
-        formData.append("file", invoiceFile, autoName);
-        formData.append("folder", "invoices");
-        formData.append("filename", autoName);
-        
-        const res = await fetch("/api/upload", { method: "POST", body: formData });
-        if (!res.ok) throw new Error("Invoice upload failed");
-        const { url } = await res.json();
+        const url = await uploadFileToR2(invoiceFile, "invoices", autoName);
         newStructure[selectedMilestoneIdx].invoiceUrl = url;
 
         await createInvoice({
@@ -95,7 +84,7 @@ export default function ClientDetailClient({ client, settings }: { client: any; 
       router.refresh();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to confirm payment");
+      toast.error(error instanceof Error ? error.message : "Failed to confirm payment");
     } finally {
       setUploading(false);
     }

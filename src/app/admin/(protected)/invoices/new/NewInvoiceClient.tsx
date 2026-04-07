@@ -9,6 +9,7 @@ import { useConfirm } from "@/providers/ConfirmProvider";
 import { updateClient } from "@/app/actions/clients";
 import { createInvoice } from "@/app/actions/invoices";
 import { downloadInvoicePdf, generateInvoicePdfBlob } from "@/lib/pdfGenerator";
+import { uploadFileToR2 } from "@/lib/uploadHelper";
 import PrintableInvoice from "@/components/pdf/PrintableInvoice";
 
 export default function NewInvoiceClient({ clients, settings }: { clients: any[], settings: any }) {
@@ -82,14 +83,7 @@ export default function NewInvoiceClient({ clients, settings }: { clients: any[]
       const blob = await generateInvoicePdfBlob(invoiceData);
       const file = new File([blob], fileName, { type: "application/pdf" });
       
-      const formData = new FormData();
-      formData.append("file", file, file.name);
-      formData.append("folder", "invoices");
-      formData.append("filename", file.name);
-
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Upload failed");
-      const { url } = await res.json();
+      const url = await uploadFileToR2(file, "invoices", file.name);
 
       const newStructure = [...paymentStructure];
       newStructure[milestoneIdx].invoiceUrl = url;

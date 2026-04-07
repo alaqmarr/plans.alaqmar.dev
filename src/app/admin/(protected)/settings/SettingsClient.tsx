@@ -9,6 +9,7 @@ import {
   CheckCircle2, X, Sparkles, Loader2, ImageUp, Trash2, PenLine
 } from "lucide-react";
 import SignatureCropper from "@/components/SignatureCropper";
+import { uploadFileToR2 } from "@/lib/uploadHelper";
 
 interface SettingsData {
   contactEmail: string;
@@ -71,15 +72,8 @@ export default function SettingsClient({ initialSettings }: { initialSettings: S
       const localUrl = URL.createObjectURL(fileToUpload);
       setSigPreview(localUrl);
 
-      // Upload to R2
-      const uploadForm = new FormData();
-      uploadForm.append("file", fileToUpload, "admin-signature.png");
-      uploadForm.append("folder", "signatures");
-      uploadForm.append("filename", `admin-signature-${Date.now()}`);
-
-      const res = await fetch("/api/upload", { method: "POST", body: uploadForm });
-      if (!res.ok) throw new Error("Upload to R2 failed");
-      const { url } = await res.json();
+      // Upload to R2 carefully using direct presigned URLs explicitly
+      const url = await uploadFileToR2(fileToUpload, "signatures", `admin-signature-${Date.now()}.png`);
 
       // Save to DB — retry up to 3 times for transient DB errors
       let saved = false;

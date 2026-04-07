@@ -15,6 +15,7 @@ import { createTicket, addTicketMessage } from "@/app/actions/tickets";
 import { uploadClientSignature } from "@/app/actions/agreements";
 import { downloadAgreementPdf, AgreementPdfData } from "@/lib/pdfGenerator";
 import SignatureCropper from "@/components/SignatureCropper";
+import { uploadFileToR2 } from "@/lib/uploadHelper";
 
 const STATUS_BADGE: Record<string, { label: string; color: string; bg: string }> = {
   open: { label: "Open", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
@@ -79,6 +80,8 @@ export default function PublicTrackerClient({
               <div>
                 <input
                   type="password"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setAuthError(""); }}
                   placeholder="Enter your password..."
@@ -365,14 +368,7 @@ function AgreementSection({ agreement, client, settings }: { agreement: any | nu
     }
     setSigStage("uploading");
     try {
-      const uploadForm = new FormData();
-      uploadForm.append("file", croppedFile, "client-signature.png");
-      uploadForm.append("folder", "signatures");
-      uploadForm.append("filename", `client-signature-${client.id}-${Date.now()}`);
-
-      const res = await fetch("/api/upload", { method: "POST", body: uploadForm });
-      if (!res.ok) throw new Error("Upload failed");
-      const { url } = await res.json();
+      const url = await uploadFileToR2(croppedFile, "signatures", `client-signature-${client.id}-${Date.now()}.png`);
 
       await uploadClientSignature(agreement.id, url, sigName.trim());
       setSigStage("done");
