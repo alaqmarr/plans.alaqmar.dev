@@ -26,10 +26,16 @@ export async function POST(req: NextRequest) {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const extension = file.name.split('.').pop() || "jpg";
     
-    // Auto-generate or use the provided custom professional name
-    const finalName = customFilename 
-      ? `${customFilename}.${extension}`
-      : `${uniqueSuffix}.${extension}`;
+    // Sanitize customFilename and file.name to prevent R2 Signature/URI errors
+    const safeCustom = customFilename ? customFilename.replace(/[^a-zA-Z0-9.\-_]/g, '_') : '';
+    const safeFile = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+
+    let finalName = safeCustom || safeFile;
+    
+    // Prevent double extensions like .pdf.pdf
+    if (!finalName.toLowerCase().endsWith(`.${extension.toLowerCase()}`)) {
+      finalName = `${finalName}.${extension}`;
+    }
       
     const key = `${folder}/${finalName}`;
 
