@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Edit2, Copy, CheckCircle2 } from "lucide-react";
+import { Edit2, Copy, CheckCircle2, ScrollText } from "lucide-react";
 
 export default function ClientsTable({ clients }: { clients: any[] }) {
   const [copied, setCopied] = useState<string | null>(null);
@@ -64,6 +64,13 @@ export default function ClientsTable({ clients }: { clients: any[] }) {
                       title="Manage Client"
                     >
                       <Edit2 size={16} />
+                    </Link>
+                    <Link
+                      href={`/admin/agreements/${client.id}`}
+                      className="p-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 rounded-xl transition-all border border-emerald-500/20 hover:border-emerald-500/40"
+                      title="View / Create Agreement"
+                    >
+                      <ScrollText size={16} />
                     </Link>
                   </div>
                 </td>

@@ -46,9 +46,12 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
 
     const structure = [];
     const originalPlanPrice = selectedPlan.discountPrice || selectedPlan.price || 0;
-    const advanceAmount = Math.round(originalPlanPrice * 0.40);
+    
+    // Advance is based on original plan price and the advance percentage defined in terms
+    const advancePercentTerm = terms[0]?.percent || 40;
+    const advanceAmount = Math.round((originalPlanPrice * advancePercentTerm) / 100);
 
-    const advancePercent = price > 0 ? Math.round((advanceAmount / price) * 100) : 40;
+    const advancePercent = price > 0 ? Math.round((advanceAmount / price) * 100) : advancePercentTerm;
 
     structure.push({
       name: terms[0]?.name || "Advance",
@@ -64,6 +67,7 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
       
       // Calculate adjusted percentages based on the offered price
       const percentPerStep = price > 0 ? Math.round((amountPerStep / price) * 100) : 0;
+
 
       for (let i = 1; i < terms.length; i++) {
         structure.push({

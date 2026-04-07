@@ -54,6 +54,8 @@ export default function NewInvoiceClient({ clients, settings }: { clients: any[]
         email: "info@alaqmar.dev",
         website: "https://alaqmar.dev",
       },
+      adminSignatureUrl: settings?.adminSignatureUrl || null,
+      adminSignatoryName: settings?.adminSignatoryName || "AL AQMAR",
     };
   };
 
@@ -77,7 +79,7 @@ export default function NewInvoiceClient({ clients, settings }: { clients: any[]
     const fileName = `Invoice_${client.name.replace(/[^a-zA-Z0-9]/g, '_')}_${msName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
 
     try {
-      const blob = generateInvoicePdfBlob(invoiceData);
+      const blob = await generateInvoicePdfBlob(invoiceData);
       const file = new File([blob], fileName, { type: "application/pdf" });
       
       const formData = new FormData();

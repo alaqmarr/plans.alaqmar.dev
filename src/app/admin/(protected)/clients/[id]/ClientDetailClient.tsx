@@ -4,12 +4,13 @@ import { useState } from "react";
 import { updateClient, deleteClient } from "@/app/actions/clients";
 import { createInvoice } from "@/app/actions/invoices";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { generateInvoicePdfBlob } from "@/lib/pdfGenerator";
-import { CheckCircle2, Circle, Copy, UploadCloud, X, Link as LinkIcon, Trash2, BellRing, BellOff } from "lucide-react";
+import { CheckCircle2, Circle, Copy, UploadCloud, X, Link as LinkIcon, Trash2, BellRing, BellOff, ScrollText } from "lucide-react";
 import toast from "react-hot-toast";
 import { useConfirm } from "@/providers/ConfirmProvider";
 
-export default function ClientDetailClient({ client }: { client: any }) {
+export default function ClientDetailClient({ client, settings }: { client: any; settings: any }) {
   const router = useRouter();
   const confirm = useConfirm();
   const [loading, setLoading] = useState(false);
@@ -110,7 +111,7 @@ export default function ClientDetailClient({ client }: { client: any }) {
     const invoiceNumber = `TWS-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
 
     try {
-      const blob = generateInvoicePdfBlob({
+      const blob = await generateInvoicePdfBlob({
         invoiceNumber,
         date: new Date(),
         clientName: client.name,
@@ -119,15 +120,17 @@ export default function ClientDetailClient({ client }: { client: any }) {
         discount: 0,
         grandTotal: msAmt,
         bankDetails: {
-          payeeName: "ALAQMAR",
-          accountNumber: "50100742482480",
-          ifsc: "HDFC0001378",
+          payeeName: settings?.bankAccountName || "ALAQMAR",
+          accountNumber: settings?.bankAccountNumber || "50100742482480",
+          ifsc: settings?.bankIfsc || "HDFC0001378",
         },
         contact: {
           phone: "+91 96184 43558",
           email: "info@alaqmar.dev",
           website: "https://alaqmar.dev",
         },
+        adminSignatureUrl: settings?.adminSignatureUrl || null,
+        adminSignatoryName: settings?.adminSignatoryName || "AL AQMAR",
       });
       const file = new File([blob], `Auto_Invoice_${msName.replace(/\s+/g,'_')}.pdf`, { type: "application/pdf" });
       setInvoiceFile(file);
@@ -224,10 +227,18 @@ export default function ClientDetailClient({ client }: { client: any }) {
           </div>
         </div>
 
+        {/* Agreement shortcut */}
+        <Link
+          href={`/admin/agreements/${client.id}`}
+          className="mt-6 w-full font-outfit text-[10px] font-bold tracking-widest uppercase py-3 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-colors flex items-center justify-center gap-2"
+        >
+          <ScrollText size={14} /> View / Create Agreement
+        </Link>
+
         <button 
           onClick={handleDeleteClient}
           disabled={loading}
-          className="mt-8 w-full font-outfit text-[10px] font-bold tracking-widest uppercase py-3 border border-red-500/30 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors flex items-center justify-center gap-2"
+          className="mt-3 w-full font-outfit text-[10px] font-bold tracking-widest uppercase py-3 border border-red-500/30 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors flex items-center justify-center gap-2"
         >
           <Trash2 size={14} /> Delete Client
         </button>

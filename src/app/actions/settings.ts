@@ -4,12 +4,14 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export async function updateSettings(data: { 
-  contactEmail: string; 
-  whatsappNumber: string;
+  contactEmail?: string; 
+  whatsappNumber?: string;
   upiId?: string;
   bankAccountName?: string;
   bankAccountNumber?: string;
   bankIfsc?: string;
+  adminSignatureUrl?: string;
+  adminSignatoryName?: string;
 }) {
   const settings = await prisma.appSettings.findFirst();
 

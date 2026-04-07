@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { LayoutDashboard, CheckSquare, Package, Settings, LogOut, Layers, Users, MessageCircle, FileText, TicketCheck } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Package, Settings, LogOut, Layers, Users, MessageCircle, FileText, TicketCheck, ScrollText } from "lucide-react";
 
 export default function AdminNav() {
   const pathname = usePathname();
@@ -13,6 +13,7 @@ export default function AdminNav() {
     { name: "Clients", href: "/admin/clients", icon: Users },
     { name: "Messages", href: "/admin/messages", icon: MessageCircle },
     { name: "Invoices", href: "/admin/invoices", icon: FileText },
+    { name: "Agreements", href: "/admin/agreements", icon: ScrollText },
     { name: "Tickets", href: "/admin/tickets", icon: TicketCheck },
     { name: "Fixed Plans", href: "/admin/plans", icon: Package },
     { name: "Global Features", href: "/admin/features", icon: CheckSquare },

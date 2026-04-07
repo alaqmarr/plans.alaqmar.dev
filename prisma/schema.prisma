@@ -66,30 +66,51 @@ model CustomItem {
 }
 
 model AppSettings {
-  id                String   @id @default(cuid())
-  contactEmail      String?
-  whatsappNumber    String?
-  upiId             String?
-  bankAccountName   String?
-  bankAccountNumber String?
-  bankIfsc          String?
-  updatedAt         DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  contactEmail         String?
+  whatsappNumber       String?
+  upiId                String?
+  bankAccountName      String?
+  bankAccountNumber    String?
+  bankIfsc             String?
+  adminSignatureUrl    String?
+  adminSignatoryName   String?  @default("AL AQMAR")
+  updatedAt            DateTime @updatedAt
 }
 
 model Client {
-  id               String   @id @default(cuid())
+  id               String     @id @default(cuid())
   name             String
   email            String?
   phoneNumbers     String[]
   planId           String
-  plan             Plan      @relation(fields: [planId], references: [id])
+  plan             Plan       @relation(fields: [planId], references: [id])
   invoices         Invoice[]
   tickets          Ticket[]
+  agreement        Agreement?
   offeredPrice     Float
-  paymentStructure String   @default("[]") // JSON representing payment milestones
-  trackingLink     String   @unique @default(cuid())
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  paymentStructure String     @default("[]")
+  trackingLink     String     @unique @default(cuid())
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+}
+
+model Agreement {
+  id                   String    @id @default(cuid())
+  clientId             String    @unique
+  client               Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  agreementText        String
+  agreementDate        DateTime?
+  adminSignatureUrl    String?
+  adminSignatoryName   String?
+  adminSignedAt        DateTime?
+  clientSignatureUrl   String?
+  clientSignatoryName  String?
+  clientSignedAt       DateTime?
+  adminVerified        Boolean   @default(false)
+  adminVerifiedAt      DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 }
 
 model Invoice {

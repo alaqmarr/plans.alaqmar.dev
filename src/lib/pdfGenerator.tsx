@@ -87,6 +87,9 @@ interface InvoiceData {
     email: string;
     website: string;
   };
+  // Optional: if set, a professional signature block is appended
+  adminSignatureUrl?: string | null;
+  adminSignatoryName?: string | null;
 }
 
 const formatINR = (n: number) => {
@@ -103,6 +106,7 @@ const fmtDate = (d: Date) => {
 // Brand Colors
 const C = {
   accent:  [67, 146, 106] as [number, number, number],
+  accentDeep: [38, 98, 68] as [number, number, number],
   accentL: [237, 247, 240] as [number, number, number],
   dark:    [26, 46, 53] as [number, number, number],
   mid:     [74, 93, 104] as [number, number, number],
@@ -111,7 +115,7 @@ const C = {
   border:  [226, 232, 240] as [number, number, number],
 };
 
-function buildInvoicePdf(data: InvoiceData): jsPDF {
+async function buildInvoicePdf(data: InvoiceData): Promise<jsPDF> {
   const pdf = new jsPDF({ format: 'a4', unit: 'mm' });
   const W = pdf.internal.pageSize.getWidth();   // 210
   const H = pdf.internal.pageSize.getHeight();  // 297
@@ -349,7 +353,55 @@ function buildInvoicePdf(data: InvoiceData): jsPDF {
   pdf.setFontSize(8.5);
   pdf.setFont("helvetica", "italic");
   pdf.setTextColor(...C.mid);
-  pdf.text("This is a computer generated invoice and does not require a signature.", W / 2, dY, { align: "center" });
+  // ── Signature / Disclaimer ──
+  if (data.adminSignatureUrl) {
+    // Signature block — admin has a saved signature
+    const sigY = H - 58;
+    const sigBlockW = (CW - 8) / 2;
+    const sigImgH = sigBlockW * (9 / 16);
+
+    pdf.setFillColor(...C.accentL);
+    pdf.roundedRect(M, sigY, sigBlockW, sigImgH + 18, 2, 2, 'F');
+
+    const adminImg = await loadImageAsBase64(data.adminSignatureUrl);
+    if (adminImg) {
+      try { pdf.addImage(adminImg, "PNG", M + 4, sigY + 4, sigBlockW - 8, sigImgH - 4); } catch { /* skip */ }
+    }
+
+    const sigTextY = sigY + sigImgH + 13;
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(8);
+    pdf.setTextColor(...C.dark);
+    pdf.text(data.adminSignatoryName || "AL AQMAR", M + 4, sigTextY);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(6.5);
+    pdf.setTextColor(...C.mid);
+    pdf.text("Authorised Signatory — The Web Sensei", M + 4, sigTextY + 4);
+
+    // Note on right side
+    const noteX = M + sigBlockW + 8;
+    pdf.setFillColor(...C.accentL);
+    pdf.roundedRect(noteX, sigY, sigBlockW, sigImgH + 18, 2, 2, 'F');
+    pdf.setFontSize(6.5);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(...C.mid);
+    const noteLines = [
+      "This is a computer generated invoice.",
+      "Electronic signature is legally valid",
+      "under the IT Act, 2000.",
+      "",
+      "Payment is due immediately upon receipt.",
+    ];
+    let nlY = sigY + 10;
+    noteLines.forEach((l) => { pdf.text(l, noteX + 5, nlY); nlY += 4; });
+  } else {
+    // No signature — just the disclaimer text
+    const dY = H - 35;
+    pdf.setFontSize(8.5);
+    pdf.setFont("helvetica", "italic");
+    pdf.setTextColor(...C.mid);
+    pdf.text("This is a computer generated invoice and does not require a signature.", W / 2, dY, { align: "center" });
+  }
 
   // ── Footer ──
   const fY = H - 24;
@@ -368,11 +420,316 @@ function buildInvoicePdf(data: InvoiceData): jsPDF {
 }
 
 /** Download invoice as PDF */
-export function downloadInvoicePdf(data: InvoiceData, filename: string) {
-  buildInvoicePdf(data).save(filename);
+export async function downloadInvoicePdf(data: InvoiceData, filename: string) {
+  (await buildInvoicePdf(data)).save(filename);
 }
 
 /** Get invoice PDF as Blob for upload */
-export function generateInvoicePdfBlob(data: InvoiceData): Blob {
-  return buildInvoicePdf(data).output('blob');
+export async function generateInvoicePdfBlob(data: InvoiceData): Promise<Blob> {
+  return (await buildInvoicePdf(data)).output('blob');
+}
+
+
+// ═══════════════════════════════════════════════════════
+// AGREEMENT: Multi-page vector PDF with signature blocks
+// ═══════════════════════════════════════════════════════
+
+export interface AgreementPdfData {
+  agreementText: string;
+  clientName: string;
+  agreementDate: Date;
+  adminSignatoryName: string;
+  adminSignatureUrl?: string | null;
+  adminSignedAt?: Date | null;
+  clientSignatoryName?: string | null;
+  clientSignatureUrl?: string | null;
+  clientSignedAt?: Date | null;
+  adminVerified?: boolean;
+}
+
+/** Loads a remote image through proxy to avoid CORS, returns base64 data URL */
+async function loadImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(`/api/proxy-image?url=${encodeURIComponent(url)}`);
+    if (!res.ok) return null;
+    const { base64 } = await res.json();
+    return base64;
+  } catch {
+    return null;
+  }
+}
+
+export async function buildAgreementPdfAsync(data: AgreementPdfData): Promise<jsPDF> {
+  const pdf = new jsPDF({ format: 'a4', unit: 'mm' });
+  const W = pdf.internal.pageSize.getWidth();
+  const H = pdf.internal.pageSize.getHeight();
+  const M = 18;
+  const CW = W - 2 * M;
+
+  const addWatermark = () => {
+    const wmText = "THE WEB SENSEI";
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(55);
+    pdf.setTextColor(242, 250, 246);
+    const textWidth = pdf.getStringUnitWidth(wmText) * pdf.getFontSize() / pdf.internal.scaleFactor;
+    const angleRad = (45 * Math.PI) / 180;
+    const startX = (W / 2) - (Math.cos(angleRad) * (textWidth / 2));
+    const startY = (H / 2) + (Math.sin(angleRad) * (textWidth / 2));
+    pdf.text(wmText, startX, startY, { angle: 45 });
+  };
+
+  const addHeader = (pageNum: number) => {
+    addWatermark();
+    pdf.setFillColor(...C.accent);
+    pdf.rect(0, 0, W, 4, 'F');
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(13);
+    pdf.setTextColor(...C.accent);
+    pdf.text("THE WEB SENSEI", M, 14);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    pdf.setTextColor(...C.light);
+    pdf.text("SERVICE AGREEMENT", M, 20);
+    if (pageNum > 1) {
+      pdf.setFontSize(8);
+      pdf.text(`Page ${pageNum}`, W - M, 14, { align: "right" });
+    }
+    pdf.setDrawColor(...C.border);
+    pdf.setLineWidth(0.3);
+    pdf.line(M, 24, W - M, 24);
+  };
+
+  const addFooter = () => {
+    const fY = H - 14;
+    pdf.setFillColor(...C.dark);
+    pdf.rect(0, fY, W, 20, 'F');
+    pdf.setFontSize(7);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(...C.white);
+    pdf.text("+91 96184 43558", M, fY + 7);
+    pdf.text("info@alaqmar.dev", W / 2, fY + 7, { align: "center" });
+    pdf.text("https://alaqmar.dev", W - M, fY + 7, { align: "right" });
+  };
+
+  // Page 1 header: big title
+  addWatermark();
+  pdf.setFillColor(...C.accent);
+  pdf.rect(0, 0, W, 4, 'F');
+
+  let y = 16;
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(22);
+  pdf.setTextColor(...C.accent);
+  pdf.text("THE WEB SENSEI", M, y);
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(8);
+  pdf.setTextColor(...C.light);
+  pdf.text("SECUNDERABAD 500015, TELANGANA, INDIA", M, y + 6);
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(22);
+  pdf.setTextColor(...C.dark);
+  pdf.text("SERVICE AGREEMENT", W - M, y, { align: "right" });
+
+  pdf.setFontSize(9);
+  pdf.setTextColor(...C.accent);
+  pdf.text(fmtDate(data.agreementDate), W - M, y + 6, { align: "right" });
+
+  pdf.setDrawColor(...C.border);
+  pdf.setLineWidth(0.4);
+  pdf.line(M, y + 12, W - M, y + 12);
+
+  y += 20;
+
+  // Render the agreement text page by page
+  const lines = data.agreementText.split("\n");
+  const PAGE_CONTENT_H = H - 30; // leave room for footer
+
+  let pageNum = 1;
+
+  const nextPage = () => {
+    addFooter();
+    pdf.addPage();
+    pageNum++;
+    addHeader(pageNum);
+    y = 32;
+  };
+
+  for (const rawLine of lines) {
+    if (y > PAGE_CONTENT_H) nextPage();
+
+    // Section dividers
+    if (rawLine.startsWith("────")) {
+      pdf.setDrawColor(...C.border);
+      pdf.setLineWidth(0.2);
+      pdf.line(M, y, W - M, y);
+      y += 3;
+      continue;
+    }
+
+    // Section headers (e.g. "1. SCOPE OF WORK")
+    const isSectionHeader = /^\d+\.\s+[A-Z\s&]+$/.test(rawLine.trim());
+    const isDocTitle = rawLine === "SERVICE AGREEMENT";
+    const isEmpty = rawLine.trim() === "";
+
+    if (isEmpty) {
+      y += 1.5;
+      continue;
+    }
+
+    if (isDocTitle) {
+      // Skip — already drawn in header
+      continue;
+    }
+
+    if (isSectionHeader) {
+      if (y > PAGE_CONTENT_H - 15) nextPage();
+      y += 2;
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9.5);
+      pdf.setTextColor(...C.accentDeep);
+      pdf.text(rawLine.trim(), M, y);
+      y += 4.5;
+      continue;
+    }
+
+    // "SERVICE PROVIDER:" / "CLIENT:" subheadings
+    if (/^(SERVICE PROVIDER|CLIENT):$/.test(rawLine.trim())) {
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(8);
+      pdf.setTextColor(...C.accent);
+      pdf.text(rawLine.trim(), M, y);
+      y += 4;
+      continue;
+    }
+
+    // Normal text / bullet points
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8.5);
+    pdf.setTextColor(...C.dark);
+
+    const isIndented = rawLine.startsWith("   ");
+    const xOffset = isIndented ? M + 4 : M;
+    const maxW = CW - (isIndented ? 4 : 0);
+    const wrapped = pdf.splitTextToSize(rawLine.trim(), maxW);
+
+    for (const wl of wrapped) {
+      if (y > PAGE_CONTENT_H) nextPage();
+      pdf.text(wl, xOffset, y);
+      y += 4.2;
+    }
+  }
+
+  // Signature block — always on a new page if < 105mm left to ensure no overflow
+  if (y > PAGE_CONTENT_H - 105) nextPage();
+
+  y += 8;
+  pdf.setDrawColor(...C.border);
+  pdf.setLineWidth(0.4);
+  pdf.line(M, y, W - M, y);
+  y += 8;
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(9);
+  pdf.setTextColor(...C.dark);
+  pdf.text("SIGNATURES", M, y);
+  y += 8;
+
+  // Load signature images
+  const [adminImgB64, clientImgB64] = await Promise.all([
+    data.adminSignatureUrl ? loadImageAsBase64(data.adminSignatureUrl) : Promise.resolve(null),
+    data.clientSignatureUrl ? loadImageAsBase64(data.clientSignatureUrl) : Promise.resolve(null),
+  ]);
+
+  const sigBlockW = 75; // Smaller than the original 82mm+ but big enough to look neat
+  const sigImgW = sigBlockW - 10;
+  const sigImgH = sigImgW * (9 / 16); // 36.5mm
+  const boxHeight = sigImgH + 30; // ~66mm total box height
+
+  // Admin signature box
+  pdf.setFillColor(...C.accentL);
+  pdf.roundedRect(M, y, sigBlockW, boxHeight, 3, 3, 'F');
+  pdf.setFontSize(6.5);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(...C.accent);
+  pdf.text("SERVICE PROVIDER", M + 5, y + 7);
+  pdf.text("THE WEB SENSEI", M + 5, y + 13);
+
+  if (adminImgB64) {
+    try {
+      pdf.addImage(adminImgB64, "PNG", M + 5, y + 16, sigImgW, sigImgH);
+    } catch { /* skip */ }
+  } else {
+    pdf.setDrawColor(...C.border);
+    pdf.setLineWidth(0.3);
+    pdf.line(M + 5, y + 16 + sigImgH - 2, M + sigBlockW - 5, y + 16 + sigImgH - 2);
+  }
+
+  const textY = y + 16 + sigImgH + 5;
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(8.5);
+  pdf.setTextColor(...C.dark);
+  pdf.text(data.adminSignatoryName, M + 5, textY);
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(7);
+  pdf.setTextColor(...C.mid);
+  pdf.text(data.adminSignedAt ? `Signed: ${fmtDate(data.adminSignedAt)}` : "Not yet signed", M + 5, textY + 5);
+
+  // Client signature box
+  const clientX = W - M - sigBlockW;
+  pdf.setFillColor(...C.accentL);
+  pdf.roundedRect(clientX, y, sigBlockW, boxHeight, 3, 3, 'F');
+  pdf.setFontSize(6.5);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(...C.accent);
+  pdf.text("CLIENT", clientX + 5, y + 7);
+  pdf.text(data.clientName.toUpperCase(), clientX + 5, y + 13);
+
+  if (clientImgB64) {
+    try {
+      pdf.addImage(clientImgB64, "PNG", clientX + 5, y + 16, sigImgW, sigImgH);
+    } catch { /* skip */ }
+  } else {
+    pdf.setDrawColor(...C.border);
+    pdf.setLineWidth(0.3);
+    pdf.line(clientX + 5, y + 16 + sigImgH - 2, clientX + sigBlockW - 5, y + 16 + sigImgH - 2);
+  }
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(8.5);
+  pdf.setTextColor(...C.dark);
+  pdf.text(data.clientSignatoryName || "Authorised Signatory", clientX + 5, textY);
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(7);
+  pdf.setTextColor(...C.mid);
+  pdf.text(data.clientSignedAt ? `Signed: ${fmtDate(data.clientSignedAt)}` : "Not yet signed", clientX + 5, textY + 5);
+
+  // Verified stamp
+  if (data.adminVerified) {
+    pdf.setFontSize(7);
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(...C.accent);
+    pdf.text("✓ SIGNATURE VERIFIED BY THE WEB SENSEI", W / 2, textY + 12, { align: "center" });
+  }
+
+  // Disclaimer
+  y = textY + 18;
+  pdf.setFontSize(7.5);
+  pdf.setFont("helvetica", "italic");
+  pdf.setTextColor(...C.mid);
+  pdf.text("This is a digitally executed agreement. Electronic signatures are legally binding under the Information Technology Act, 2000.", W / 2, y, { align: "center", maxWidth: CW });
+
+  addFooter();
+  return pdf;
+}
+
+export async function downloadAgreementPdf(data: AgreementPdfData, filename: string) {
+  const pdf = await buildAgreementPdfAsync(data);
+  pdf.save(filename);
+}
+
+export async function generateAgreementPdfBlob(data: AgreementPdfData): Promise<Blob> {
+  const pdf = await buildAgreementPdfAsync(data);
+  return pdf.output('blob');
 }
