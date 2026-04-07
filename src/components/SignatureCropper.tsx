@@ -98,22 +98,22 @@ export default function SignatureCropper({ onComplete, onCancel, imageFile }: Si
     });
   }, [img, cropX, cropY, cropW]);
 
-  const getCanvasPos = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getCanvasPosRaw = (clientX: number, clientY: number) => {
     const rect = canvasRef.current!.getBoundingClientRect();
     const scaleX = CANVAS_W / rect.width;
     const scaleY = CANVAS_H / rect.height;
-    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
   };
 
-  const onMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const pos = getCanvasPos(e);
+  const handleStart = (clientX: number, clientY: number) => {
+    const pos = getCanvasPosRaw(clientX, clientY);
     setIsDragging(true);
     setDragStart({ x: pos.x - cropX, y: pos.y - cropY });
   };
 
-  const onMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleMove = useCallback((clientX: number, clientY: number) => {
     if (!isDragging || !img) return;
-    const pos = getCanvasPos(e);
+    const pos = getCanvasPosRaw(clientX, clientY);
     const scale = Math.min(CANVAS_W / img.width, CANVAS_H / img.height);
     const dw = img.width * scale;
     const dh = img.height * scale;
@@ -210,11 +210,15 @@ export default function SignatureCropper({ onComplete, onCancel, imageFile }: Si
             width={CANVAS_W}
             height={CANVAS_H}
             className={`w-full rounded-2xl border border-white/5 ${isProcessing ? "opacity-30 pointer-events-none" : "cursor-move"}`}
-            style={{ background: "#0a0a0a" }}
-            onMouseDown={onMouseDown}
-            onMouseMove={onMouseMove}
+            style={{ background: "#0a0a0a", touchAction: "none" }}
+            onMouseDown={(e) => handleStart(e.clientX, e.clientY)}
+            onMouseMove={(e) => handleMove(e.clientX, e.clientY)}
             onMouseUp={() => setIsDragging(false)}
             onMouseLeave={() => setIsDragging(false)}
+            onTouchStart={(e) => handleStart(e.touches[0].clientX, e.touches[0].clientY)}
+            onTouchMove={(e) => handleMove(e.touches[0].clientX, e.touches[0].clientY)}
+            onTouchEnd={() => setIsDragging(false)}
+            onTouchCancel={() => setIsDragging(false)}
           />
           {isProcessing && (
             <div className="absolute inset-4 flex flex-col items-center justify-center rounded-2xl">
