@@ -39,7 +39,10 @@ export default function MessagesClient({ clients }: { clients: any[] }) {
     const formatRupee = (amt: number) => `*₹${amt.toLocaleString('en-IN')}*`;
 
     if (template === "advance") {
-      return `Hello *${client.name}*! 👋\n\nThank you for choosing *THE WEB SENSEI* for your _${client.plan?.name || 'Project'}_. We are thrilled to partner with you and bring your vision to life! 🚀\n\n📌 *Project Overview:*\n• Total Agreed Investment: ${formatRupee(client.offeredPrice || 0)}\n• Advance Required: ${formatRupee(advanceAmount)}\n\nTo officially kick off the development phase, please process the advance payment using your personalized, secure tracking portal below:\n\n🔗 ${trackingLink}\n\n💡 _Tip: You can always use this link to track your payment milestones, download receipts, and monitor progress securely anytime._\n\nLooking forward to an amazing journey together! ✨`;
+      return `Hello *${client.name}*! 👋\n\nThank you for choosing *THE WEB SENSEI* for your _${client.plan?.name || 'Project'}_. We are thrilled to partner with you and bring your vision to life! 🚀\n\n📌 *Project Overview:*\n• Total Agreed Investment: ${formatRupee(client.offeredPrice || 0)}\n• Advance Required: ${formatRupee(advanceAmount)}\n\nTo officially kick off the development phase, please process the advance payment using your personalized, secure tracking portal below:\n\n🔗 ${trackingLink}\n\n💡 _Access Hint: Your secure password is just this registered phone number (without spaces or symbols)_\n\n💡 _Tip: You can always use this link to track your payment milestones, download receipts, and monitor progress securely anytime._\n\nLooking forward to an amazing journey together! ✨`;
+    }
+    else if (template === "agreement") {
+      return `Hello *${client.name}*! 👋\n\nWe have prepared the official Service Agreement for your _${client.plan?.name || 'Project'}_ to ensure everything is transparent and aligned.\n\nYou can securely view the agreement terms, download a PDF copy, and digitally sign it directly through your client portal:\n\n🔗 *Review & Sign Agreement:*\n${trackingLink}\n\n💡 _Access Hint: Your secure password to access the portal is simply your registered phone number (without any spaces or symbols)._\n\nPlease review the terms and provide your signature at your earliest convenience so we can officially proceed. Let me know if you have any questions! 🙏\n\nBest regards,\n*THE WEB SENSEI*`;
     }
     else if (template === "reminder") {
       const ms = selectedMilestoneIdx !== null ? paymentStructure[selectedMilestoneIdx] : null;
@@ -111,6 +114,13 @@ export default function MessagesClient({ clients }: { clients: any[] }) {
             >
               <div className="font-outfit font-bold text-sm mb-1">Details & Advance</div>
               <div className="text-xs opacity-70">Initial kickoff, shares total price and tracking link.</div>
+            </button>
+            <button 
+              onClick={() => setTemplate("agreement")}
+              className={`p-4 border rounded-xl text-left transition-all ${template === "agreement" ? "bg-fuchsia-500/10 border-fuchsia-500/30 text-fuchsia-400" : "bg-zinc-950/50 border-white/5 text-zinc-400 hover:border-white/10"}`}
+            >
+              <div className="font-outfit font-bold text-sm mb-1">Signature Request</div>
+              <div className="text-xs opacity-70">Requests client to view and sign the agreement.</div>
             </button>
             <button 
               onClick={() => setTemplate("reminder")}
