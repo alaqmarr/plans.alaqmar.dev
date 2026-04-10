@@ -244,11 +244,10 @@ export default function PublicTrackerClient({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-outfit text-sm font-bold uppercase tracking-widest transition-all ${
-                isActive
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-outfit text-sm font-bold uppercase tracking-widest transition-all ${isActive
                   ? "bg-white text-black shadow-lg"
                   : "text-zinc-500 hover:text-white hover:bg-white/5"
-              }`}
+                }`}
             >
               <Icon size={14} />
               {tab.label}
@@ -287,6 +286,29 @@ export default function PublicTrackerClient({
               </div>
             </div>
           </div>
+
+          {/* Development Preview Link */}
+          {client.developmentLink && (
+            <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden group">
+              <div className="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-indigo-500/20 transition-all"></div>
+
+              <h3 className="font-outfit text-xl font-bold text-white mb-3 tracking-tight flex items-center gap-3">
+                <Sparkles className="text-indigo-400" /> Staging / Preview Environment
+              </h3>
+              <p className="font-outfit text-zinc-400 text-sm mb-6 max-w-2xl">
+                You can monitor the live development progress of your project using the secure preview link below. Note that this environment may contain work-in-progress features.
+              </p>
+
+              <a
+                href={client.developmentLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-3 px-6 py-3.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 rounded-xl font-outfit text-sm font-bold uppercase tracking-widest transition-all border border-indigo-500/30 shadow-lg group-hover:border-indigo-400/50"
+              >
+                <LinkIcon size={16} /> Open Live Preview
+              </a>
+            </div>
+          )}
 
           {/* Features */}
           {client.plan?.features?.length > 0 && (
@@ -628,12 +650,11 @@ function AgreementSection({ agreement, client, settings }: { agreement: any | nu
 
               <div
                 {...getRootProps()}
-                className={`relative flex flex-col items-center justify-center border-2 rounded-2xl p-8 transition-all min-h-[130px] ${
-                  !adminSigned ? "border-zinc-800 opacity-40 cursor-not-allowed pointer-events-none" :
-                  sigStage === "uploading" ? "border-zinc-800 cursor-default" :
-                  isDragActive ? "border-emerald-500 bg-emerald-500/5 scale-[1.01] cursor-copy" :
-                  "border-zinc-800 hover:border-zinc-600 hover:bg-white/2 cursor-pointer"
-                }`}
+                className={`relative flex flex-col items-center justify-center border-2 rounded-2xl p-8 transition-all min-h-[130px] ${!adminSigned ? "border-zinc-800 opacity-40 cursor-not-allowed pointer-events-none" :
+                    sigStage === "uploading" ? "border-zinc-800 cursor-default" :
+                      isDragActive ? "border-emerald-500 bg-emerald-500/5 scale-[1.01] cursor-copy" :
+                        "border-zinc-800 hover:border-zinc-600 hover:bg-white/2 cursor-pointer"
+                  }`}
               >
                 <input {...getInputProps()} />
                 {sigStage === "uploading" ? (

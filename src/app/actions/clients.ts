@@ -10,16 +10,20 @@ export async function createClient(data: {
   planId: string;
   offeredPrice: number;
   paymentStructure: string; // JSON string
+  developmentLink?: string;
 }) {
-  const baseSlug = data.name.toLowerCase().replace(/[\s_]+/g, '-').replace(/[^\w-]+/g, '');
+  const baseSlug = data.name
+    .toLowerCase()
+    .replace(/[\s_]+/g, "-")
+    .replace(/[^\w-]+/g, "");
   const randomSuffix = Math.random().toString(36).substring(2, 6);
   const trackingLink = `${baseSlug}-${randomSuffix}`;
 
-  const client = await prisma.client.create({ 
+  const client = await prisma.client.create({
     data: {
       ...data,
-      trackingLink
-    }
+      trackingLink,
+    },
   });
   revalidatePath("/admin/clients");
   return { success: true, client };

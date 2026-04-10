@@ -14,6 +14,7 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
     name: "",
     email: "",
     offeredPrice: "",
+    developmentLink: "",
   });
   const [phoneNumbers, setPhoneNumbers] = useState<string[]>([""]);
   const [selectedPlanId, setSelectedPlanId] = useState("");
@@ -46,7 +47,7 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
 
     const structure = [];
     const originalPlanPrice = selectedPlan.discountPrice || selectedPlan.price || 0;
-    
+
     // Advance is based on original plan price and the advance percentage defined in terms
     const advancePercentTerm = terms[0]?.percent || 40;
     const advanceAmount = Math.round((originalPlanPrice * advancePercentTerm) / 100);
@@ -64,7 +65,7 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
     if (terms.length > 1) {
       const remainingAmount = Math.max(0, price - advanceAmount);
       const amountPerStep = Math.round(remainingAmount / (terms.length - 1));
-      
+
       // Calculate adjusted percentages based on the offered price
       const percentPerStep = price > 0 ? Math.round((amountPerStep / price) * 100) : 0;
 
@@ -86,7 +87,7 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPlanId) return toast.error("Select a plan first");
-    
+
     // Filter empty phones
     const validPhones = phoneNumbers.filter(p => p.trim() !== "");
     if (validPhones.length === 0) return toast.error("Provide at least one phone number");
@@ -99,7 +100,8 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
         phoneNumbers: validPhones,
         planId: selectedPlanId,
         offeredPrice: parseFloat(formData.offeredPrice),
-        paymentStructure: JSON.stringify(paymentStructure)
+        paymentStructure: JSON.stringify(paymentStructure),
+        developmentLink: formData.developmentLink.trim() || undefined
       });
       toast.success("Client created successfully!");
       router.push("/admin/clients");
@@ -113,7 +115,7 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
   return (
     <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-3xl p-8 relative shadow-2xl">
       <div className="mb-8 flex items-center gap-4">
-        <Link 
+        <Link
           href="/admin/clients"
           className="p-2 bg-zinc-800/50 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded-xl transition-all"
         >
@@ -129,18 +131,18 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="font-outfit block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Client Name</label>
-            <input 
+            <input
               type="text" required
-              value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
+              value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
               className="w-full bg-zinc-950/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-outfit"
               placeholder="e.g. John Doe"
             />
           </div>
           <div>
             <label className="font-outfit block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Email Address (Optional)</label>
-            <input 
+            <input
               type="email"
-              value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
+              value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
               className="w-full bg-zinc-950/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-outfit"
               placeholder="e.g. contact@client.com"
             />
@@ -152,7 +154,7 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
           <div className="space-y-3">
             {phoneNumbers.map((phone, i) => (
               <div key={i} className="flex items-center gap-3">
-                <input 
+                <input
                   type="text" required={i === 0}
                   value={phone} onChange={e => updatePhone(i, e.target.value)}
                   className="flex-1 bg-zinc-950/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-outfit"
@@ -173,11 +175,11 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
 
         <div className="pt-8 border-t border-white/5 mt-8">
           <h3 className="font-outfit text-xl font-bold text-white mb-6 tracking-tight">Plan & Pricing</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="font-outfit block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Assign Plan</label>
-              <select 
+              <select
                 required
                 value={selectedPlanId} onChange={e => setSelectedPlanId(e.target.value)}
                 className="w-full bg-zinc-950/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-outfit"
@@ -190,13 +192,28 @@ export default function NewClientClient({ plans }: { plans: any[] }) {
             </div>
             <div>
               <label className="font-outfit block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Agreed Final Deal Price (₹)</label>
-              <input 
+              <input
                 type="number" required min="1"
-                value={formData.offeredPrice} onChange={e => setFormData({...formData, offeredPrice: e.target.value})}
+                value={formData.offeredPrice} onChange={e => setFormData({ ...formData, offeredPrice: e.target.value })}
                 className="w-full bg-zinc-950/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-outfit font-bold text-emerald-400"
                 placeholder="e.g. 50000"
               />
             </div>
+          </div>
+        </div>
+
+        <div className="pt-8 border-t border-white/5 mt-8">
+          <h3 className="font-outfit text-xl font-bold text-white mb-6 tracking-tight">Project Resources</h3>
+
+          <div>
+            <label className="font-outfit block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Development/Preview Link (Optional)</label>
+            <input
+              type="url"
+              value={formData.developmentLink} onChange={e => setFormData({ ...formData, developmentLink: e.target.value })}
+              className="w-full bg-zinc-950/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-outfit"
+              placeholder="e.g. https://staging.example.com"
+            />
+            <p className="font-outfit text-xs text-zinc-500 mt-2">This link will be available to the client in their tracking portal.</p>
           </div>
         </div>
 

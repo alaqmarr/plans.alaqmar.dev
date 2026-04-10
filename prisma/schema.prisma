@@ -90,6 +90,7 @@ model Client {
   agreement        Agreement?
   offeredPrice     Float
   paymentStructure String     @default("[]")
+  developmentLink  String?
   trackingLink     String     @unique @default(cuid())
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
