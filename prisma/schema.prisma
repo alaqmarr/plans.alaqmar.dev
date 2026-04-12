@@ -87,6 +87,7 @@ model Client {
   plan             Plan       @relation(fields: [planId], references: [id])
   invoices         Invoice[]
   tickets          Ticket[]
+  quotations       Quotation[]
   agreement        Agreement?
   offeredPrice     Float
   paymentStructure String     @default("[]")
@@ -146,4 +147,20 @@ model TicketMessage {
   sender    String
   message   String
   createdAt DateTime @default(now())
+}
+
+model Quotation {
+  id              String   @id @default(cuid())
+  quoteNumber     String   @unique
+  clientName      String
+  clientId        String?
+  client          Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  planName        String
+  totalAmount     Float
+  advanceAmount   Float
+  items           String
+  tenureYears     Int      @default(1)
+  paymentTerms    String   @default("[]")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

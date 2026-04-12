@@ -15,7 +15,7 @@ export const exportReactElementToPdf = async (element: ReactNode, filename: stri
   container.style.width = "794px";
   container.style.backgroundColor = "#ffffff";
   container.style.color = "#000000";
-  
+
   document.body.appendChild(container);
   const root = createRoot(container);
 
@@ -28,17 +28,17 @@ export const exportReactElementToPdf = async (element: ReactNode, filename: stri
     const wrapper = document.getElementById("pdf-export-wrapper");
     if (!wrapper) throw new Error("Wrapper not found after render");
 
-    const canvas = await html2canvas(wrapper, { 
+    const canvas = await html2canvas(wrapper, {
       scale: 2,
       useCORS: true,
       logging: false,
       backgroundColor: "#ffffff",
       ignoreElements: (el) => el.tagName === 'STYLE' || el.tagName === 'LINK',
     });
-    
+
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({ format: "a4", unit: "mm" });
-    
+
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
     const pageHeight = pdf.internal.pageSize.getHeight();
@@ -105,14 +105,14 @@ const fmtDate = (d: Date) => {
 
 // Brand Colors
 const C = {
-  accent:  [67, 146, 106] as [number, number, number],
+  accent: [67, 146, 106] as [number, number, number],
   accentDeep: [38, 98, 68] as [number, number, number],
   accentL: [237, 247, 240] as [number, number, number],
-  dark:    [26, 46, 53] as [number, number, number],
-  mid:     [74, 93, 104] as [number, number, number],
-  light:   [138, 154, 163] as [number, number, number],
-  white:   [255, 255, 255] as [number, number, number],
-  border:  [226, 232, 240] as [number, number, number],
+  dark: [26, 46, 53] as [number, number, number],
+  mid: [74, 93, 104] as [number, number, number],
+  light: [138, 154, 163] as [number, number, number],
+  white: [255, 255, 255] as [number, number, number],
+  border: [226, 232, 240] as [number, number, number],
 };
 
 async function buildInvoicePdf(data: InvoiceData): Promise<jsPDF> {
@@ -126,13 +126,13 @@ async function buildInvoicePdf(data: InvoiceData): Promise<jsPDF> {
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(55); // slightly smaller to fit better diagonally
   pdf.setTextColor(242, 250, 246); // Very light green accent
-  
+
   // Calculate text dimensions to center it manually
   const textWidth = pdf.getStringUnitWidth(wmText) * pdf.getFontSize() / pdf.internal.scaleFactor;
   // For a 45 degree angle, we offset by half the width and height
   // In jsPDF, when rotating, it rotates around the starting coordinate (bottom-left of text).
   const angleRad = (45 * Math.PI) / 180;
-  
+
   // To center the text exactly at W/2, H/2:
   const startX = (W / 2) - (Math.cos(angleRad) * (textWidth / 2));
   const startY = (H / 2) + (Math.sin(angleRad) * (textWidth / 2));
@@ -225,10 +225,10 @@ async function buildInvoicePdf(data: InvoiceData): Promise<jsPDF> {
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
     const descLines = pdf.splitTextToSize(item.description, CW * 0.5);
-    
+
     // ry is the starting y for this row
     const ry = y + 5;
-    
+
     pdf.setTextColor(...C.dark);
     pdf.text(descLines, cols.desc, ry);
 
@@ -242,7 +242,7 @@ async function buildInvoicePdf(data: InvoiceData): Promise<jsPDF> {
 
     // increment y based on number of lines
     y += (descLines.length * 5) + 8;
-    
+
     pdf.setDrawColor(...C.border);
     pdf.setLineWidth(0.2);
     pdf.line(M + 3, y, W - M - 3, y);
@@ -427,6 +427,309 @@ export async function downloadInvoicePdf(data: InvoiceData, filename: string) {
 /** Get invoice PDF as Blob for upload */
 export async function generateInvoicePdfBlob(data: InvoiceData): Promise<Blob> {
   return (await buildInvoicePdf(data)).output('blob');
+}
+
+
+// ═══════════════════════════════════════════════════════
+// QUOTATION: Native Vector PDF
+// ═══════════════════════════════════════════════════════
+
+export interface QuotationData {
+  quoteNumber: string;
+  date: Date;
+  clientName: string;
+  planName: string;
+  items: { description: string; basePrice: number; discountPercent: number; finalPrice: number }[];
+  subtotal: number;
+  totalDiscount: number;
+  grandTotal: number;
+  tenureYears: number;
+  paymentTerms: { name: string; percent: number; amount: number }[];
+  contact: {
+    phone: string;
+    email: string;
+    website: string;
+  };
+  adminSignatureUrl?: string | null;
+  adminSignatoryName?: string | null;
+}
+
+async function buildQuotationPdf(data: QuotationData): Promise<jsPDF> {
+  const pdf = new jsPDF({ format: 'a4', unit: 'mm' });
+  const W = pdf.internal.pageSize.getWidth();
+  const H = pdf.internal.pageSize.getHeight();
+  const M = 20;
+  const CW = W - 2 * M;
+
+  const wmText = "THE WEB SENSEI";
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(55);
+  pdf.setTextColor(242, 250, 246);
+  const textWidth = pdf.getStringUnitWidth(wmText) * pdf.getFontSize() / pdf.internal.scaleFactor;
+  const angleRad = (45 * Math.PI) / 180;
+  const startX = (W / 2) - (Math.cos(angleRad) * (textWidth / 2));
+  const startY = (H / 2) + (Math.sin(angleRad) * (textWidth / 2));
+  pdf.text(wmText, startX, startY, { angle: 45 });
+
+  pdf.setFillColor(...C.accent);
+  pdf.rect(0, 0, W, 4, 'F');
+
+  let y = 20;
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(24);
+  pdf.setTextColor(...C.accent);
+  pdf.text("THE WEB SENSEI", M, y);
+
+  pdf.setFontSize(8);
+  pdf.setTextColor(...C.light);
+  pdf.text("SECUNDERABAD 500015, TELANGANA", M, y + 6);
+
+  pdf.setFontSize(26);
+  pdf.setTextColor(...C.dark);
+  pdf.text("QUOTATION", W - M, y, { align: "right" });
+
+  pdf.setFontSize(10);
+  pdf.setTextColor(...C.accent);
+  pdf.text(`#${data.quoteNumber}`, W - M, y + 6, { align: "right" });
+
+  y = 36;
+  pdf.setDrawColor(...C.border);
+  pdf.setLineWidth(0.4);
+  pdf.line(M, y, W - M, y);
+
+  y = 48;
+  pdf.setFontSize(7);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(...C.light);
+  pdf.text("PREPARED FOR", M, y);
+
+  pdf.setFontSize(14);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(...C.dark);
+  const clientNameLines = pdf.splitTextToSize(data.clientName.toUpperCase(), CW / 2);
+  pdf.text(clientNameLines, M, y + 7);
+
+  const rx = W - M;
+  pdf.setFontSize(7);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(...C.light);
+  pdf.text("DATE", rx - 44, y, { align: "right" });
+  pdf.setFontSize(10);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(...C.dark);
+  pdf.text(fmtDate(data.date), rx, y, { align: "right" });
+
+  pdf.setFontSize(7);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(...C.light);
+  pdf.text("PLAN", rx - 44, y + 8, { align: "right" });
+  pdf.setFontSize(10);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(...C.dark);
+  pdf.text(data.planName, rx, y + 8, { align: "right" });
+
+  pdf.setFontSize(7);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(...C.light);
+  pdf.text("TENURE", rx - 44, y + 16, { align: "right" });
+  pdf.setFontSize(10);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(...C.dark);
+  pdf.text(`${data.tenureYears} Year${data.tenureYears > 1 ? 's' : ''}`, rx, y + 16, { align: "right" });
+
+  y = 75;
+  const cols = { desc: M + 5, base: M + CW * 0.45, disc: M + CW * 0.70, amt: W - M - 5 };
+
+  pdf.setFillColor(...C.accent);
+  pdf.roundedRect(M, y, CW, 12, 2, 2, 'F');
+
+  pdf.setFontSize(8);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(...C.white);
+  const hy = y + 7.5;
+  pdf.text("SERVICE / FEATURE", cols.desc, hy);
+  pdf.text("BASE PRICE", cols.base, hy, { align: "right" });
+  pdf.text("DISCOUNT (%)", cols.disc, hy, { align: "right" });
+  pdf.text("FINAL PRICE", cols.amt, hy, { align: "right" });
+
+  y += 16;
+  data.items.forEach((item) => {
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    const descLines = pdf.splitTextToSize(item.description, CW * 0.4);
+
+    const ry = y + 5;
+
+    pdf.setTextColor(...C.dark);
+    pdf.text(descLines, cols.desc, ry);
+
+    pdf.setTextColor(...C.mid);
+    pdf.text(`${formatINR(item.basePrice)}`, cols.base, ry, { align: "right" });
+    pdf.text(`${item.discountPercent.toFixed(1)}%`, cols.disc, ry, { align: "right" });
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(...C.dark);
+    pdf.text(`${formatINR(item.finalPrice)}`, cols.amt, ry, { align: "right" });
+
+    y += (descLines.length * 5) + 8;
+
+    if (y > H - 60) {
+      // Need a new page
+      pdf.addPage();
+      y = M;
+    } else {
+      pdf.setDrawColor(...C.border);
+      pdf.setLineWidth(0.2);
+      pdf.line(M + 3, y, W - M - 3, y);
+    }
+  });
+
+  const tY = Math.max(y + 20, 160);
+  pdf.setDrawColor(...C.border);
+  pdf.setLineWidth(0.4);
+  pdf.line(W - M - 80, tY - 6, W - M, tY - 6);
+
+  pdf.setFontSize(9);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(...C.mid);
+  pdf.text("SUBTOTAL", W - M - 46, tY, { align: "right" });
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(...C.dark);
+  pdf.text(formatINR(data.subtotal), W - M - 5, tY, { align: "right" });
+
+  let cY = tY;
+  if (data.totalDiscount > 0) {
+    cY += 8;
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(...C.mid);
+    pdf.text("TOTAL DISCOUNT", W - M - 46, cY, { align: "right" });
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(...C.accent);
+    pdf.text(`-${formatINR(data.totalDiscount)}`, W - M - 5, cY, { align: "right" });
+  }
+
+  cY += 6;
+  pdf.setDrawColor(...C.border);
+  pdf.line(W - M - 80, cY, W - M, cY);
+
+  cY += 10;
+  pdf.setFontSize(11);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(...C.dark);
+  pdf.text("GRAND TOTAL", W - M - 46, cY, { align: "right" });
+  pdf.setFontSize(18);
+  pdf.setTextColor(...C.accent);
+  pdf.text(formatINR(data.grandTotal), W - M - 5, cY + 1, { align: "right" });
+
+  // ── Bottom Section: Fixed at bottom of A4 ──
+  // Layout: Signature (left) | Note & Validity (right) — then Footer bar
+  const footerBarH = 16;
+  const footerY = H - footerBarH;
+  const noteH = 20;
+  const sigH = 32;
+  const gap = 6;
+
+  // Payment Structure — placed on the left, aligned with totals vertically
+  let payY = tY;
+  pdf.setFontSize(9);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(...C.dark);
+  pdf.text("PAYMENT STRUCTURE", M, payY);
+
+  payY += 7;
+  if (data.paymentTerms && data.paymentTerms.length > 0) {
+    data.paymentTerms.forEach(term => {
+      pdf.setFontSize(8);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(...C.mid);
+      pdf.text(`${term.name} (${term.percent}%)`, M, payY);
+      
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(...C.dark);
+      pdf.text(formatINR(term.amount), M + 60, payY, { align: "right" });
+      payY += 5;
+    });
+  } else {
+      pdf.setFontSize(8);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(...C.mid);
+      pdf.text("100% Advance Payment", M, payY);
+  }
+
+  // Signature + Note row — fixed at bottom, above footer bar
+  const bottomRowY = footerY - noteH - gap;
+  const halfW = (CW - gap) / 2;
+
+  if (data.adminSignatureUrl) {
+    // Signature block (left half)
+    pdf.setFillColor(...C.accentL);
+    pdf.roundedRect(M, bottomRowY, halfW, noteH, 2, 2, 'F');
+
+    const adminImg = await loadImageAsBase64(data.adminSignatureUrl);
+    if (adminImg) {
+      try { pdf.addImage(adminImg, "PNG", M + 3, bottomRowY + 2, 28, 12); } catch { /* skip */ }
+    }
+
+    // Signatory text next to image
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(7);
+    pdf.setTextColor(...C.dark);
+    pdf.text(data.adminSignatoryName || "AL AQMAR", M + 34, bottomRowY + 8);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(6);
+    pdf.setTextColor(...C.mid);
+    pdf.text("Authorised Signatory", M + 34, bottomRowY + 12);
+    pdf.text("The Web Sensei", M + 34, bottomRowY + 16);
+
+    // Note block (right half)
+    const noteX = M + halfW + gap;
+    pdf.setFillColor(...C.accentL);
+    pdf.roundedRect(noteX, bottomRowY, halfW, noteH, 2, 2, 'F');
+
+    pdf.setFontSize(6.5);
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(...C.accent);
+    pdf.text("NOTE & VALIDITY", noteX + 5, bottomRowY + 6);
+
+    pdf.setFontSize(6.5);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(...C.mid);
+    pdf.text("This quotation is valid for 15 days from the date of issue.", noteX + 5, bottomRowY + 11);
+    pdf.text("Prices are estimated and subject to change if scope alters.", noteX + 5, bottomRowY + 15);
+  } else {
+    // No signature — full-width note block
+    pdf.setFillColor(...C.accentL);
+    pdf.roundedRect(M, bottomRowY, CW, noteH, 3, 3, 'F');
+
+    pdf.setFontSize(7);
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(...C.accent);
+    pdf.text("NOTE & VALIDITY", M + 6, bottomRowY + 8);
+
+    pdf.setFontSize(7);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(...C.mid);
+    pdf.text("This quotation is valid for 15 days from the date of issue. The prices quoted above are estimated", M + 6, bottomRowY + 13);
+    pdf.text("and subject to change if the scope of work alters. Final pricing will be reflected in the agreement.", M + 6, bottomRowY + 17);
+  }
+
+  // ── Footer Bar ──
+  pdf.setFillColor(...C.dark);
+  pdf.rect(0, footerY, W, footerBarH, 'F');
+
+  pdf.setFontSize(8);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(...C.white);
+  const fcY = footerY + 8;
+  pdf.text(data.contact.phone, M, fcY);
+  pdf.text(data.contact.email, W / 2, fcY, { align: "center" });
+  pdf.text(data.contact.website, W - M, fcY, { align: "right" });
+
+  return pdf;
+}
+
+export async function downloadQuotationPdf(data: QuotationData, filename: string) {
+  (await buildQuotationPdf(data)).save(filename);
 }
 
 

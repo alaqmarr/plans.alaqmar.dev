@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { LayoutDashboard, CheckSquare, Package, Settings, LogOut, Layers, Users, MessageCircle, FileText, TicketCheck, ScrollText } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Package, Settings, LogOut, Layers, Users, MessageCircle, FileText, TicketCheck, ScrollText, Calculator } from "lucide-react";
 
 export default function AdminNav() {
   const pathname = usePathname();
@@ -13,6 +13,7 @@ export default function AdminNav() {
     { name: "Clients", href: "/admin/clients", icon: Users },
     { name: "Messages", href: "/admin/messages", icon: MessageCircle },
     { name: "Invoices", href: "/admin/invoices", icon: FileText },
+    { name: "Quotations", href: "/admin/quotations", icon: Calculator },
     { name: "Agreements", href: "/admin/agreements", icon: ScrollText },
     { name: "Tickets", href: "/admin/tickets", icon: TicketCheck },
     { name: "Fixed Plans", href: "/admin/plans", icon: Package },
@@ -38,11 +39,10 @@ export default function AdminNav() {
             <Link
               key={link.name}
               href={link.href}
-              className={`font-outfit text-[13px] uppercase tracking-widest font-bold flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all border ${
-                isActive
+              className={`font-outfit text-[13px] uppercase tracking-widest font-bold flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all border ${isActive
                   ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.1)]"
                   : "border-transparent text-zinc-500 hover:bg-white/5 hover:text-zinc-300 hover:border-white/10"
-              }`}
+                }`}
             >
               <Icon size={18} />
               <span>{link.name}</span>
